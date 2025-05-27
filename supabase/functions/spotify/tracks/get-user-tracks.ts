@@ -1,24 +1,24 @@
-import { saveAllUserTracks } from './../../_shared/save-all-user-tracks.ts';
-import { HonoFn } from '../types.ts';
-import { validateAuth } from '../../_shared/validate-auth.ts';
-import { setupSupabase } from '../../_shared/setup-supabase.ts';
-import { getSpotifyToken } from '../../_shared/get-spotify-token.ts';
-import { setupSpotifyClient } from '../../_shared/setup-spotify-client.ts';
-import { Schema } from '../../_shared/schema.ts';
-import { Database } from '../../_shared/database.gen.ts';
+import { saveAllUserTracks } from "./../../_shared/save-all-user-tracks.ts";
+import { HonoFn } from "../../_shared/types.ts";
+import { validateAuth } from "../../_shared/validate-auth.ts";
+import { setupSupabase } from "../../_shared/setup-supabase.ts";
+import { getSpotifyToken } from "../../_shared/get-spotify-token.ts";
+import { setupSpotifyClient } from "../../_shared/setup-spotify-client.ts";
+import { Schema } from "../../_shared/schema.ts";
+import { Database } from "../../_shared/database.gen.ts";
 import {
   SPOTIFY_TRACK_CHECK_LIMIT,
   SUPABASE_MAX_ROWS,
-} from '../../_shared/constants.ts';
-import { HTTPException } from '@hono/http-exception';
-import { trueRandomShuffle } from '../../_shared/shuffles/true-random-shuffle.ts';
-import { checkIfTracksSaved } from '@soundify/web-api';
+} from "../../_shared/constants.ts";
+import { HTTPException } from "@hono/http-exception";
+import { trueRandomShuffle } from "../../_shared/shuffles/true-random-shuffle.ts";
+import { checkIfTracksSaved } from "@soundify/web-api";
 
-export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
+export const GetUserTracks: HonoFn<"GetUserTracks"> = async (ctx) => {
   const { authHeader } = validateAuth(ctx);
   const { supabaseClient } = setupSupabase({ authHeader });
 
-  const userId = ctx.req.param('userId');
+  const userId = ctx.req.param("userId");
   const { refresh: refreshToken, access: accessToken } = await getSpotifyToken({
     supabaseClient,
     userId,
@@ -31,32 +31,32 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
   });
 
   const {
-    orderBy = 'latest-first',
-    limit = 'all',
+    orderBy = "latest-first",
+    limit = "all",
     idsToOmit = [],
-  }: Schema['GetUserTracks']['request'] = ctx.req.query() ?? {};
+  }: Schema["GetUserTracks"]["request"] = ctx.req.query() ?? {};
   await saveAllUserTracks({
     userId,
     supabaseClient,
     spotifyClient,
   });
 
-  const tracksPool: Database['spotify_cache']['Tables']['user_tracks']['Row'][] =
+  const tracksPool: Database["spotify_cache"]["Tables"]["user_tracks"]["Row"][] =
     [];
   const trackIdsToRemove: string[] = [];
 
   let hasAllSavedTracks = false;
   while (!hasAllSavedTracks) {
     const nextPage = await supabaseClient
-      .schema('spotify_cache')
-      .from('user_tracks')
-      .select('*')
-      .eq('user_id', userId)
-      .filter('track_id', 'not.in', `(${idsToOmit.join(',')})`)
+      .schema("spotify_cache")
+      .from("user_tracks")
+      .select("*")
+      .eq("user_id", userId)
+      .filter("track_id", "not.in", `(${idsToOmit.join(",")})`)
       .range(tracksPool.length, tracksPool.length + SUPABASE_MAX_ROWS)
       .limit(SUPABASE_MAX_ROWS)
-      .order('added_at', { ascending: false });
-    console.log('Fetched saved user tracks:', {
+      .order("added_at", { ascending: false });
+    console.log("Fetched saved user tracks:", {
       offset: tracksPool.length,
       count: nextPage.data?.length ?? 0,
       userId,
@@ -66,7 +66,7 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
       hasAllSavedTracks = true;
     if (nextPage.error) {
       const message =
-        'Error fetching user tracks.' + JSON.stringify(nextPage.error);
+        "Error fetching user tracks." + JSON.stringify(nextPage.error);
       console.error(message);
       throw new HTTPException(500, {
         message,
@@ -74,23 +74,23 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
     }
   }
 
-  if (limit === 'all') {
-    if (orderBy === 'latest-first') {
-      console.log('Returning user tracks:', {
+  if (limit === "all") {
+    if (orderBy === "latest-first") {
+      console.log("Returning user tracks:", {
         count: tracksPool.length,
         orderBy,
         userId,
       });
       return ctx.json(tracksPool, 200);
-    } else if (orderBy === 'oldest-first') {
-      console.log('Returning user tracks:', {
+    } else if (orderBy === "oldest-first") {
+      console.log("Returning user tracks:", {
         count: tracksPool.length,
         orderBy,
         userId,
       });
       return ctx.json(tracksPool.reverse(), 200);
-    } else if (orderBy === 'random') {
-      console.log('Returning user tracks:', {
+    } else if (orderBy === "random") {
+      console.log("Returning user tracks:", {
         count: tracksPool.length,
         orderBy,
         userId,
@@ -100,20 +100,20 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
   } else {
     const tracksResponse: typeof tracksPool = [];
     let checkedTracksCount = 0;
-    if (orderBy === 'oldest-first') tracksPool.reverse();
-    if (orderBy === 'latest-first' || orderBy === 'oldest-first') {
+    if (orderBy === "oldest-first") tracksPool.reverse();
+    if (orderBy === "latest-first" || orderBy === "oldest-first") {
       while (
         tracksResponse.length < limit &&
         checkedTracksCount < tracksPool.length
       ) {
         const tracksToCheck = tracksPool.slice(
           checkedTracksCount,
-          checkedTracksCount + SPOTIFY_TRACK_CHECK_LIMIT
+          checkedTracksCount + SPOTIFY_TRACK_CHECK_LIMIT,
         );
         checkedTracksCount += tracksToCheck.length;
         const checks = await checkIfTracksSaved(
           spotifyClient,
-          tracksToCheck.map(({ track_id }) => track_id)
+          tracksToCheck.map(({ track_id }) => track_id),
         );
         const { tracksToAdd, tracksToOmit } = tracksToCheck.reduce<{
           tracksToAdd: typeof tracksPool;
@@ -127,9 +127,9 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
             }
             return acc;
           },
-          { tracksToAdd: [], tracksToOmit: [] }
+          { tracksToAdd: [], tracksToOmit: [] },
         );
-        console.log('Checked user tracks:', {
+        console.log("Checked user tracks:", {
           userId,
           count: tracksToCheck.length,
           tracksToAdd: tracksToAdd.length,
@@ -146,7 +146,7 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
 
         trackIdsToRemove.push(...tracksToOmit.map(({ track_id }) => track_id));
       }
-    } else if (orderBy === 'random') {
+    } else if (orderBy === "random") {
       while (tracksResponse.length < limit && tracksPool.length) {
         const tracksToCheck: typeof tracksPool = [];
         for (let i = 0; i < SPOTIFY_TRACK_CHECK_LIMIT; i++) {
@@ -157,7 +157,7 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
         checkedTracksCount += tracksToCheck.length;
         const checks = await checkIfTracksSaved(
           spotifyClient,
-          tracksToCheck.map(({ track_id }) => track_id)
+          tracksToCheck.map(({ track_id }) => track_id),
         );
         const { tracksToAdd, tracksToOmit } = tracksToCheck.reduce<{
           tracksToAdd: typeof tracksPool;
@@ -171,9 +171,9 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
             }
             return acc;
           },
-          { tracksToAdd: [], tracksToOmit: [] }
+          { tracksToAdd: [], tracksToOmit: [] },
         );
-        console.log('Checked user tracks:', {
+        console.log("Checked user tracks:", {
           userId,
           count: tracksToCheck.length,
           tracksToAdd: tracksToAdd.length,
@@ -193,16 +193,16 @@ export const GetUserTracks: HonoFn<'GetUserTracks'> = async (ctx) => {
     }
 
     await supabaseClient
-      .schema('spotify_cache')
-      .from('user_tracks')
+      .schema("spotify_cache")
+      .from("user_tracks")
       .delete()
-      .eq('user_id', userId)
-      .in('track_id', trackIdsToRemove);
-    console.log('Removed user tracks:', {
+      .eq("user_id", userId)
+      .in("track_id", trackIdsToRemove);
+    console.log("Removed user tracks:", {
       count: trackIdsToRemove.length,
       userId,
     });
-    console.log('Returning user tracks:', {
+    console.log("Returning user tracks:", {
       count: tracksResponse.length,
       orderBy,
       userId,

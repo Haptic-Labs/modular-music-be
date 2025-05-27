@@ -1,7 +1,7 @@
 {
   "imports": {
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
-    "@supabase/edge-runtime": "https://esm.sh/v135/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts",
+    "@supabase/edge-runtime": "jsr:@supabase/functions-js/edge-runtime.d.ts",
     "@hono/hono": "jsr:@hono/hono@4.4.8",
     "@hono/cors": "jsr:@hono/hono@4.4.8/cors",
     "@hono/http-exception": "jsr:@hono/hono@4.4.8/http-exception",
