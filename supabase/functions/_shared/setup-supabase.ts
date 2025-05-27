@@ -46,3 +46,22 @@ export const setupSupabaseWithUser = async ({
 
   return { supabaseClient, user };
 };
+
+export const setupSupabaseWithServiceRole = () => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    const message = "Missing Supabase environment variables";
+    console.error(message);
+    throw new HTTPException(500, { message });
+  }
+
+  const serviceRoleSupabaseClient = createClient<
+    Database,
+    SchemaName,
+    Database[SchemaName]
+  >(supabaseUrl, serviceRoleKey);
+
+  return { serviceRoleSupabaseClient };
+};

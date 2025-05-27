@@ -438,6 +438,15 @@ export type Database = {
         Args: { moduleId: string };
         Returns: Database["public"]["CompositeTypes"]["ModuleActions"];
       };
+      GetModuleRunData: {
+        Args: { moduleId: string; callerUserId: string };
+        Returns: {
+          module: Database["public"]["Tables"]["modules"]["Row"];
+          moduleSources: Database["public"]["Tables"]["module_sources"]["Row"][];
+          moduleActions: Database["public"]["Tables"]["module_actions"]["Row"][];
+          moduleOutputs: Database["public"]["Tables"]["module_outputs"]["Row"][];
+        }[];
+      };
       GetShuffleAction: {
         Args: { actionId: string };
         Returns: Database["public"]["CompositeTypes"]["ModuleAction:Shuffle"];
