@@ -7,53 +7,210 @@ export type Json =
   | Json[];
 
 export type Database = {
+  feature_flags: {
+    Tables: {
+      global_flags: {
+        Row: {
+          created_at: string;
+          enabled: boolean;
+          flag_name: Database["feature_flags"]["Enums"]["FLAG_NAME"];
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          enabled?: boolean;
+          flag_name: Database["feature_flags"]["Enums"]["FLAG_NAME"];
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          enabled?: boolean;
+          flag_name?: Database["feature_flags"]["Enums"]["FLAG_NAME"];
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      FLAG_NAME: "light-mode";
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
-      module_actions: {
+      combine_action_sources: {
         Row: {
-          config: Json;
+          action_id: string;
           created_at: string;
           deleted_at: string | null;
           id: string;
           image_url: string | null;
-          module_id: string;
-          order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
+          limit: number | null;
+          source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id: string | null;
+          title: string | null;
           updated_at: string | null;
         };
         Insert: {
-          config: Json;
+          action_id: string;
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
           image_url?: string | null;
-          module_id: string;
-          order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
+          limit?: number | null;
+          source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id?: string | null;
+          title?: string | null;
           updated_at?: string | null;
         };
         Update: {
-          config?: Json;
+          action_id?: string;
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
           image_url?: string | null;
-          module_id?: string;
-          order?: number;
-          title?: string;
-          type?: Database['public']['Enums']['MODULE_ACTION_TYPE'];
+          limit?: number | null;
+          source_type?: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id?: string | null;
+          title?: string | null;
           updated_at?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'module_actions_module_id_fkey';
-            columns: ['module_id'];
+            foreignKeyName: "combine_action_sources_action_id_fkey";
+            columns: ["action_id"];
             isOneToOne: false;
-            referencedRelation: 'modules';
-            referencedColumns: ['id'];
-          }
+            referencedRelation: "module_actions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      filter_action_sources: {
+        Row: {
+          action_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          image_url: string | null;
+          limit: number | null;
+          source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id: string | null;
+          title: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          action_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          limit?: number | null;
+          source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          action_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          limit?: number | null;
+          source_type?: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
+          spotify_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "filter_action_sources_action_id_fkey";
+            columns: ["action_id"];
+            isOneToOne: false;
+            referencedRelation: "module_actions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      limit_action_configs: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          limit: number;
+          type: Database["public"]["Enums"]["LIMIT_TYPE"];
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id: string;
+          limit: number;
+          type?: Database["public"]["Enums"]["LIMIT_TYPE"];
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          limit?: number;
+          type?: Database["public"]["Enums"]["LIMIT_TYPE"];
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "limit_action_configs_id_fkey";
+            columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "module_actions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      module_actions: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          module_id: string;
+          order: number;
+          type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"];
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          module_id: string;
+          order: number;
+          type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"];
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          module_id?: string;
+          order?: number;
+          type?: Database["public"]["Enums"]["MODULE_ACTION_TYPE"];
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "module_actions_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
         ];
       };
       module_outputs: {
@@ -61,46 +218,52 @@ export type Database = {
           created_at: string;
           de_dupe: boolean;
           deleted_at: string | null;
-          id: number;
+          id: string;
+          image_url: string | null;
           limit: number | null;
-          mode: Database['public']['Enums']['MODULE_OUTPUT_MODE'];
+          mode: Database["public"]["Enums"]["MODULE_OUTPUT_MODE"];
           module_id: string;
           spotify_id: string;
-          type: Database['public']['Enums']['SPOTIFY_OUTPUT_TYPE'];
+          title: string;
+          type: Database["public"]["Enums"]["SPOTIFY_OUTPUT_TYPE"];
           updated_at: string | null;
         };
         Insert: {
           created_at?: string;
           de_dupe: boolean;
           deleted_at?: string | null;
-          id?: number;
+          id?: string;
+          image_url?: string | null;
           limit?: number | null;
-          mode: Database['public']['Enums']['MODULE_OUTPUT_MODE'];
+          mode: Database["public"]["Enums"]["MODULE_OUTPUT_MODE"];
           module_id: string;
           spotify_id: string;
-          type: Database['public']['Enums']['SPOTIFY_OUTPUT_TYPE'];
+          title: string;
+          type: Database["public"]["Enums"]["SPOTIFY_OUTPUT_TYPE"];
           updated_at?: string | null;
         };
         Update: {
           created_at?: string;
           de_dupe?: boolean;
           deleted_at?: string | null;
-          id?: number;
+          id?: string;
+          image_url?: string | null;
           limit?: number | null;
-          mode?: Database['public']['Enums']['MODULE_OUTPUT_MODE'];
+          mode?: Database["public"]["Enums"]["MODULE_OUTPUT_MODE"];
           module_id?: string;
           spotify_id?: string;
-          type?: Database['public']['Enums']['SPOTIFY_OUTPUT_TYPE'];
+          title?: string;
+          type?: Database["public"]["Enums"]["SPOTIFY_OUTPUT_TYPE"];
           updated_at?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'module_outputs_module_id_fkey';
-            columns: ['module_id'];
+            foreignKeyName: "module_outputs_module_id_fkey";
+            columns: ["module_id"];
             isOneToOne: false;
-            referencedRelation: 'modules';
-            referencedColumns: ['id'];
-          }
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
         ];
       };
       module_sources: {
@@ -108,46 +271,46 @@ export type Database = {
           created_at: string;
           deleted_at: string | null;
           id: string;
-          image_url: string;
+          image_url: string | null;
           limit: number | null;
-          module_id: string | null;
-          spotify_id: string;
+          module_id: string;
+          spotify_id: string | null;
           title: string;
-          type: Database['public']['Enums']['SPOTIFY_SOURCE_TYPE'];
+          type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
           updated_at: string | null;
         };
         Insert: {
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
-          image_url: string;
+          image_url?: string | null;
           limit?: number | null;
-          module_id?: string | null;
-          spotify_id: string;
+          module_id: string;
+          spotify_id?: string | null;
           title: string;
-          type: Database['public']['Enums']['SPOTIFY_SOURCE_TYPE'];
+          type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
           updated_at?: string | null;
         };
         Update: {
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
-          image_url?: string;
+          image_url?: string | null;
           limit?: number | null;
-          module_id?: string | null;
-          spotify_id?: string;
+          module_id?: string;
+          spotify_id?: string | null;
           title?: string;
-          type?: Database['public']['Enums']['SPOTIFY_SOURCE_TYPE'];
+          type?: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"];
           updated_at?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'module_sources_module_id_fkey';
-            columns: ['module_id'];
+            foreignKeyName: "module_sources_module_id_fkey";
+            columns: ["module_id"];
             isOneToOne: false;
-            referencedRelation: 'modules';
-            referencedColumns: ['id'];
-          }
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
         ];
       };
       modules: {
@@ -158,6 +321,10 @@ export type Database = {
           is_running: boolean;
           name: string;
           next_scheduled_run: string | null;
+          previous_run: string | null;
+          schedule_config:
+            | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
+            | null;
           updated_at: string | null;
           user_id: string;
         };
@@ -168,6 +335,10 @@ export type Database = {
           is_running?: boolean;
           name: string;
           next_scheduled_run?: string | null;
+          previous_run?: string | null;
+          schedule_config?:
+            | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
+            | null;
           updated_at?: string | null;
           user_id: string;
         };
@@ -178,6 +349,10 @@ export type Database = {
           is_running?: boolean;
           name?: string;
           next_scheduled_run?: string | null;
+          previous_run?: string | null;
+          schedule_config?:
+            | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
+            | null;
           updated_at?: string | null;
           user_id?: string;
         };
@@ -186,33 +361,60 @@ export type Database = {
       recently_played_source_configs: {
         Row: {
           created_at: string;
+          deleted_at: string | null;
           id: string;
-          interval: Database['public']['Enums']['RECENTLY_PLAYED_INTERVAL'];
+          interval: Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"];
           quantity: number;
           updated_at: string | null;
         };
         Insert: {
           created_at?: string;
+          deleted_at?: string | null;
           id: string;
-          interval: Database['public']['Enums']['RECENTLY_PLAYED_INTERVAL'];
+          interval: Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"];
           quantity: number;
           updated_at?: string | null;
         };
         Update: {
           created_at?: string;
+          deleted_at?: string | null;
           id?: string;
-          interval?: Database['public']['Enums']['RECENTLY_PLAYED_INTERVAL'];
+          interval?: Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"];
           quantity?: number;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      shuffle_action_configs: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          shuffle_type: Database["public"]["Enums"]["SHUFFLE_TYPE"];
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id: string;
+          shuffle_type: Database["public"]["Enums"]["SHUFFLE_TYPE"];
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          shuffle_type?: Database["public"]["Enums"]["SHUFFLE_TYPE"];
           updated_at?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'recently_played_source_configs_id_fkey';
-            columns: ['id'];
+            foreignKeyName: "shuffle_action_configs_id_fkey";
+            columns: ["id"];
             isOneToOne: true;
-            referencedRelation: 'module_sources';
-            referencedColumns: ['id'];
-          }
+            referencedRelation: "module_actions";
+            referencedColumns: ["id"];
+          },
         ];
       };
     };
@@ -220,104 +422,252 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      UpsertModuleCombineAction: {
-        Args: {
-          p_module_id: string;
-          p_order: number;
-          p_sources: Json[];
-          p_id?: string;
-        };
-        Returns: {
-          config: Json;
-          created_at: string;
-          deleted_at: string | null;
-          id: string;
-          image_url: string | null;
-          module_id: string;
-          order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
-          updated_at: string | null;
-        };
+      GetCombineAction: {
+        Args: { actionId: string };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Combine"];
       };
-      UpsertModuleFilterAction: {
-        Args: {
-          p_module_id: string;
-          p_order: number;
-          p_sources: Json[];
-          p_id?: string;
-        };
-        Returns: {
-          config: Json;
-          created_at: string;
-          deleted_at: string | null;
-          id: string;
-          image_url: string | null;
-          module_id: string;
-          order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
-          updated_at: string | null;
-        };
+      GetFilterAction: {
+        Args: { actionId: string };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Filter"];
       };
-      UpsertModuleLimitAction: {
-        Args: {
-          p_module_id: string;
-          p_order: number;
-          p_limit: number;
-          p_source_type?: Database['public']['Enums']['SPOTIFY_SOURCE_TYPE'];
-          p_id?: string;
-        };
-        Returns: {
-          config: Json;
-          created_at: string;
-          deleted_at: string | null;
-          id: string;
-          image_url: string | null;
-          module_id: string;
-          order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
-          updated_at: string | null;
-        };
+      GetLimitAction: {
+        Args: { actionId: string };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Limit"];
       };
-      UpsertModuleShuffleAction: {
+      GetModuleActions: {
+        Args: { moduleId: string };
+        Returns: Database["public"]["CompositeTypes"]["ModuleActions"];
+      };
+      GetShuffleAction: {
+        Args: { actionId: string };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Shuffle"];
+      };
+      RemoveModuleAction: {
+        Args: { actionId: string };
+        Returns: Database["public"]["CompositeTypes"]["RemoveModuleActionResponse"];
+      };
+      ReorderActions: {
+        Args: { action_ids: string[] };
+        Returns: Database["public"]["Tables"]["module_actions"]["Row"][];
+      };
+      UpsertModuleActionCombine: {
         Args: {
-          p_module_id: string;
-          p_order: number;
-          p_shuffle_type: Database['public']['Enums']['SHUFFLE_TYPE'];
-          p_id?: string;
-        };
-        Returns: {
-          config: Json;
-          created_at: string;
-          deleted_at: string | null;
-          id: string;
-          image_url: string | null;
           module_id: string;
           order: number;
-          title: string;
-          type: Database['public']['Enums']['MODULE_ACTION_TYPE'];
-          updated_at: string | null;
+          sources: Database["public"]["CompositeTypes"]["CombineSourceUpsertRequest"][];
+          actionId?: string;
         };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Combine"];
+      };
+      UpsertModuleActionFilter: {
+        Args: {
+          module_id: string;
+          order: number;
+          sources: Database["public"]["CompositeTypes"]["FilterSourceUpsertRequest"][];
+          action_id?: string;
+        };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Filter"];
+      };
+      UpsertModuleActionLimit: {
+        Args: {
+          module_id: string;
+          order: number;
+          limit: number;
+          actionId?: string;
+          type?: Database["public"]["Enums"]["LIMIT_TYPE"];
+        };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Limit"];
+      };
+      UpsertModuleActionShuffle: {
+        Args: {
+          moduleId: string;
+          newOrder: number;
+          actionId?: string;
+          shuffleType?: Database["public"]["Enums"]["SHUFFLE_TYPE"];
+        };
+        Returns: Database["public"]["CompositeTypes"]["ModuleAction:Shuffle"];
+      };
+      "UpsertModuleSource:RecentlyListened": {
+        Args: {
+          p_module_id: string;
+          p_quantity: number;
+          p_interval: Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"];
+          p_source_id?: string;
+        };
+        Returns: Database["public"]["CompositeTypes"]["recently_listened_source_with_config"];
       };
     };
     Enums: {
-      MODULE_ACTION_TYPE: 'FILTER' | 'SHUFFLE' | 'LIMIT' | 'COMBINE' | 'MODULE';
-      MODULE_OUTPUT_MODE: 'REPLACE' | 'APPEND' | 'PREPEND';
-      RECENTLY_PLAYED_INTERVAL: 'DAYS' | 'WEEKS' | 'MONTHS';
-      SHUFFLE_TYPE: 'RANDOM';
-      SPOTIFY_OUTPUT_TYPE: 'PLAYLIST';
+      LIMIT_TYPE: "OVERALL" | "PER_SOURCE";
+      MODULE_ACTION_TYPE: "FILTER" | "SHUFFLE" | "LIMIT" | "COMBINE" | "MODULE";
+      MODULE_OUTPUT_MODE: "REPLACE" | "APPEND" | "PREPEND";
+      RECENTLY_PLAYED_INTERVAL: "DAYS" | "WEEKS" | "MONTHS";
+      SCHEDULE_INTERVAL: "DAYS" | "WEEKS" | "MONTHS" | "YEARS";
+      SHUFFLE_TYPE: "RANDOM";
+      SPOTIFY_OUTPUT_TYPE: "PLAYLIST";
       SPOTIFY_SOURCE_TYPE:
-        | 'PLAYLIST'
-        | 'TRACK'
-        | 'ALBUM'
-        | 'ARTIST'
-        | 'RECENTLY_PLAYED'
-        | 'LIKED_SONGS';
+        | "PLAYLIST"
+        | "TRACK"
+        | "ALBUM"
+        | "ARTIST"
+        | "RECENTLY_PLAYED"
+        | "LIKED_SONGS";
     };
     CompositeTypes: {
-      [_ in never]: never;
+      CombineSourceUpsertRequest: {
+        id: string | null;
+        action_id: string | null;
+        source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"] | null;
+        spotify_id: string | null;
+        limit: number | null;
+        title: string | null;
+        image_url: string | null;
+      };
+      FilterSourceUpsertRequest: {
+        id: string | null;
+        action_id: string | null;
+        source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"] | null;
+        spotify_id: string | null;
+        limit: number | null;
+        title: string | null;
+        image_url: string | null;
+        recently_listened_config:
+          | Database["public"]["CompositeTypes"]["RecentlyListenedConfig"]
+          | null;
+      };
+      ModuleAction: {
+        id: string | null;
+        module_id: string | null;
+        order: number | null;
+        type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"] | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+      };
+      "ModuleAction:Combine": {
+        id: string | null;
+        module_id: string | null;
+        order: number | null;
+        type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"] | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+        sources:
+          | Database["public"]["Tables"]["combine_action_sources"]["Row"][]
+          | null;
+      };
+      "ModuleAction:Filter": {
+        id: string | null;
+        module_id: string | null;
+        order: number | null;
+        type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"] | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+        sources:
+          | Database["public"]["Tables"]["filter_action_sources"]["Row"][]
+          | null;
+      };
+      "ModuleAction:Limit": {
+        id: string | null;
+        module_id: string | null;
+        order: number | null;
+        type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"] | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+        config:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Limit:Config"]
+          | null;
+      };
+      "ModuleAction:Limit:Config": {
+        id: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+        limit: number | null;
+        type: Database["public"]["Enums"]["LIMIT_TYPE"] | null;
+        deleted_at: string | null;
+      };
+      "ModuleAction:Shuffle": {
+        id: string | null;
+        module_id: string | null;
+        order: number | null;
+        type: Database["public"]["Enums"]["MODULE_ACTION_TYPE"] | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+        config:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Shuffle:Config"]
+          | null;
+      };
+      "ModuleAction:Shuffle:Config": {
+        id: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+        shuffle_type: Database["public"]["Enums"]["SHUFFLE_TYPE"] | null;
+        deleted_at: string | null;
+      };
+      ModuleActions: {
+        shuffleActions:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Shuffle"][]
+          | null;
+        filterActions:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Filter"][]
+          | null;
+        limitActions:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Limit"][]
+          | null;
+        combineActions:
+          | Database["public"]["CompositeTypes"]["ModuleAction:Combine"][]
+          | null;
+      };
+      ModuleScheduleConfig: {
+        interval: Database["public"]["Enums"]["SCHEDULE_INTERVAL"] | null;
+        quantity: number | null;
+      };
+      recently_listened_source_with_config: {
+        source_id: string | null;
+        module_id: string | null;
+        type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"] | null;
+        spotify_id: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+        limit: number | null;
+        image_url: string | null;
+        title: string | null;
+        config_id: string | null;
+        config_created_at: string | null;
+        config_updated_at: string | null;
+        quantity: number | null;
+        interval:
+          | Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"]
+          | null;
+      };
+      RecentlyListenedConfig: {
+        quantity: number | null;
+        interval:
+          | Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"]
+          | null;
+      };
+      RemoveModuleActionResponse: {
+        updated_actions:
+          | Database["public"]["Tables"]["module_actions"]["Row"][]
+          | null;
+        module_id: string | null;
+      };
+      SimpleSource: {
+        source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"] | null;
+        spotify_id: string | null;
+        limit: number | null;
+      };
+      SpotifySource: {
+        spotify_id: string | null;
+        source_type: Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"] | null;
+        limit: number | null;
+        title: string | null;
+        image_url: string | null;
+      };
     };
   };
   spotify_auth: {
@@ -348,6 +698,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      upsert_provider_data: {
+        Args: {
+          p_user_id: string;
+          p_access?: string;
+          p_refresh?: string;
+          p_expires_at?: string;
+        };
+        Returns: {
+          access: string;
+          expires_at: string;
+          refresh: string;
+          user_id: string;
+        };
+      };
       UpsertProviderData: {
         Args: {
           p_user_id: string;
@@ -516,9 +880,7 @@ export type Database = {
     };
     Functions: {
       DeleteOldRecentlyListened: {
-        Args: {
-          p_older_than: string;
-        };
+        Args: { p_older_than: string };
         Returns: number;
       };
     };
@@ -531,99 +893,140 @@ export type Database = {
   };
 };
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>];
+type DefaultSchema = Database[Extract<keyof Database, "public">];
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-        Database[PublicTableNameOrOptions['schema']]['Views'])
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database;
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] &
-      PublicSchema['Views'])
-  ? (PublicSchema['Tables'] &
-      PublicSchema['Views'])[PublicTableNameOrOptions] extends {
-      Row: infer R;
-    }
-    ? R
-    : never
-  : never;
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database;
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-  ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
-  : never;
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database;
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-  ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
-  : never;
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema['Enums']
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
-    : never = never
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-  ? PublicSchema['Enums'][PublicEnumNameOrOptions]
-  : never;
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database;
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-    : never = never
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
-  ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never;
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  feature_flags: {
+    Enums: {
+      FLAG_NAME: ["light-mode"],
+    },
+  },
+  public: {
+    Enums: {
+      LIMIT_TYPE: ["OVERALL", "PER_SOURCE"],
+      MODULE_ACTION_TYPE: ["FILTER", "SHUFFLE", "LIMIT", "COMBINE", "MODULE"],
+      MODULE_OUTPUT_MODE: ["REPLACE", "APPEND", "PREPEND"],
+      RECENTLY_PLAYED_INTERVAL: ["DAYS", "WEEKS", "MONTHS"],
+      SCHEDULE_INTERVAL: ["DAYS", "WEEKS", "MONTHS", "YEARS"],
+      SHUFFLE_TYPE: ["RANDOM"],
+      SPOTIFY_OUTPUT_TYPE: ["PLAYLIST"],
+      SPOTIFY_SOURCE_TYPE: [
+        "PLAYLIST",
+        "TRACK",
+        "ALBUM",
+        "ARTIST",
+        "RECENTLY_PLAYED",
+        "LIKED_SONGS",
+      ],
+    },
+  },
+  spotify_auth: {
+    Enums: {},
+  },
+  spotify_cache: {
+    Enums: {},
+  },
+} as const;
