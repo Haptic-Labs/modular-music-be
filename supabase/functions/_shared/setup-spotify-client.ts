@@ -1,9 +1,10 @@
-import { HTTPException } from '@hono/http-exception';
-import { SpotifyClient } from '@soundify/web-api';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './database.gen.ts';
-import { SchemaName } from './constants.ts';
-import { spotifyTokenRefresher } from './spotify-token-refresher.ts';
+import { HTTPException } from "@hono/http-exception";
+import { SpotifyClient } from "@soundify/web-api";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "./database.gen.ts";
+import { SchemaName } from "./constants.ts";
+import { spotifyTokenRefresher } from "./spotify-token-refresher.ts";
+import { getSpotifyToken } from "./get-spotify-token.ts";
 
 type SetupSupabaseClientArgs = {
   accessToken: string;
@@ -18,10 +19,10 @@ export const setupSpotifyClient = ({
   supabaseClient,
   userId,
 }: SetupSupabaseClientArgs) => {
-  const spotifyClientId = Deno.env.get('SPOTIFY_CLIENT_ID');
+  const spotifyClientId = Deno.env.get("SPOTIFY_CLIENT_ID");
   if (!spotifyClientId)
     throw new HTTPException(500, {
-      message: 'No Spotify client ID secret found.',
+      message: "No Spotify client ID secret found.",
     });
   const spotifyClient = new SpotifyClient(accessToken, {
     refresher: async () => {
@@ -36,4 +37,23 @@ export const setupSpotifyClient = ({
   });
 
   return { spotifyClient };
+};
+
+export const setupSpotifyClientWithoutTokens = async ({
+  supabaseClient,
+  userId,
+}: Omit<SetupSupabaseClientArgs, "accessToken" | "refreshToken">) => {
+  const { refresh: refreshToken, access: accessToken } = await getSpotifyToken({
+    supabaseClient,
+    userId,
+  });
+
+  const res = setupSpotifyClient({
+    accessToken,
+    refreshToken,
+    supabaseClient,
+    userId,
+  });
+
+  return res.spotifyClient;
 };
