@@ -109,6 +109,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@4.4.8",
+      "jsr:@supabase/functions-js@*",
       "npm:@soundify/web-api@1.1.5",
       "npm:@supabase/supabase-js@2"
     ]

@@ -13,10 +13,10 @@ export enum Routes {
   RunModule = "modules/:moduleId/run",
 }
 
-type GetArtistTracksResponse =
-  Database["spotify_cache"]["Tables"]["artists"]["Row"] & {
-    track_ids: Database["spotify_cache"]["Tables"]["albums"]["Row"]["track_ids"];
-  };
+type GetArtistTracksResponse = {
+  artist_id: string;
+  albums: { album_id: string; track_ids: string[] }[];
+};
 
 export type Schema = {
   GetPlaylist: {

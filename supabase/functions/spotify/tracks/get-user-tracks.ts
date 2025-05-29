@@ -14,6 +14,7 @@ import { HTTPException } from "@hono/http-exception";
 import { trueRandomShuffle } from "../../_shared/shuffles/true-random-shuffle.ts";
 import { checkIfTracksSaved } from "@soundify/web-api";
 
+// TODO: refactor this file to use abstracted `getUserTracks` spotify data fetcher
 export const GetUserTracks: HonoFn<"GetUserTracks"> = async (ctx) => {
   const { authHeader } = validateAuth(ctx);
   const { supabaseClient } = setupSupabase({ authHeader });
