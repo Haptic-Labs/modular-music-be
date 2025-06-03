@@ -6,8 +6,13 @@ import { getArtistData } from "./get-artist-data.ts";
 import { getUserTracks } from "./get-user-tracks.ts";
 import { getRecentlyListenedData } from "./get-recently-listened-data.ts";
 
-type GetAllTrackIdsArgs = {
-  sources: Database["public"]["Tables"]["module_sources"]["Row"][];
+type BaseSource = Pick<
+  Database["public"]["Tables"]["module_sources"]["Row"],
+  "spotify_id" | "type" | "id"
+>;
+
+type GetAllTrackIdsArgs<T extends BaseSource> = {
+  sources: T[];
   supabaseClient: SupabaseClient<
     Database,
     "spotify_cache" | "public" | "spotify_auth"
@@ -15,11 +20,11 @@ type GetAllTrackIdsArgs = {
   userId: string;
 };
 
-export const getAllTrackIds = async ({
+export const getAllTrackIds = async <T extends BaseSource>({
   sources,
   supabaseClient,
   userId,
-}: GetAllTrackIdsArgs): Promise<string[]> => {
+}: GetAllTrackIdsArgs<T>): Promise<string[]> => {
   const sourcesWithIds = sources.reduce<
     Record<Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"], string[]>
   >(

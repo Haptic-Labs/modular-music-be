@@ -3,10 +3,12 @@ import {
   setupSupabaseWithServiceRole,
 } from "../../_shared/setup-supabase.ts";
 import { validateAuth } from "../../_shared/validate-auth.ts";
+import { trueRandomShuffle } from "../../_shared/shuffles/true-random-shuffle.ts";
 import { getAllTrackIds } from "../../_shared/spotify-data-fetchers/get-all-track-ids.ts";
 import { HTTPException } from "@hono/http-exception";
 import { BlankEnv, H, HandlerResponse } from "@hono/hono/types";
 import { Schema } from "../../_shared/schema.ts";
+import { Database } from "../../_shared/database.gen.ts";
 
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
@@ -33,8 +35,7 @@ export const RunModule: H<
 
   const { data, error } = await serviceRoleSupabaseClient
     .schema("public")
-    .rpc("GetModuleRunData", { moduleId, callerUserId: user.id })
-    .single();
+    .rpc("GetModuleRunData", { moduleId, callerUserId: user.id });
 
   if (error) {
     const errorCode = parseInt(error.code, 10);
@@ -47,11 +48,68 @@ export const RunModule: H<
     });
   }
 
-  const trackIdsFromSources = await getAllTrackIds({
+  const moduleData: Database["public"]["Functions"]["GetModuleRunData"]["Returns"] =
+    data;
+
+  if (!moduleData) {
+    throw new HTTPException(500, {
+      message: "Module data not found",
+    });
+  }
+
+  let workingTrackIds = await getAllTrackIds({
     userId: user.id,
-    sources: data.moduleSources,
+    sources: moduleData.moduleSources ?? [],
     supabaseClient: serviceRoleSupabaseClient,
   });
 
-  // TODO: implement actions and output
+  // Run through actions
+  moduleData.moduleActions?.forEach(async (action) => {
+    switch (action.type) {
+      case "LIMIT":
+        workingTrackIds = workingTrackIds.slice(
+          0,
+          moduleData.limitConfigs?.find((config) => config.id === action.id)
+            ?.limit ?? undefined,
+        );
+        break;
+      case "COMBINE":
+        workingTrackIds = workingTrackIds.concat(
+          await getAllTrackIds({
+            sources:
+              moduleData.combineSources
+                ?.filter((source) => source.action_id === action.id)
+                .map((source) => ({
+                  ...source,
+                  type: source.source_type,
+                })) ?? [],
+            supabaseClient: serviceRoleSupabaseClient,
+            userId: user.id,
+          }),
+        );
+        break;
+      case "FILTER": {
+        const trackIdsToRemove = await getAllTrackIds({
+          sources:
+            moduleData.filterSources
+              ?.filter((source) => source.action_id === action.id)
+              .map((source) => ({
+                ...source,
+                type: source.source_type,
+              })) ?? [],
+          supabaseClient: serviceRoleSupabaseClient,
+          userId: user.id,
+        });
+        workingTrackIds = workingTrackIds.filter(
+          (trackId) => !trackIdsToRemove.includes(trackId),
+        );
+        break;
+      }
+      case "SHUFFLE":
+        workingTrackIds = trueRandomShuffle(workingTrackIds);
+        break;
+    }
+  });
+
+  // TODO: write result to outputs
 };

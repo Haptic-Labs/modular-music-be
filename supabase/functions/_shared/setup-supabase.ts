@@ -1,7 +1,7 @@
 import { HTTPException } from "@hono/http-exception";
 import { Database } from "./database.gen.ts";
 import { SchemaName } from "./constants.ts";
-import { User, createClient } from "@supabase/supabase-js";
+import { SupabaseClient, User, createClient } from "@supabase/supabase-js";
 
 export const setupSupabase = ({ authHeader }: { authHeader?: string }) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -47,7 +47,12 @@ export const setupSupabaseWithUser = async ({
   return { supabaseClient, user };
 };
 
-export const setupSupabaseWithServiceRole = () => {
+export const setupSupabaseWithServiceRole = (): {
+  serviceRoleSupabaseClient: SupabaseClient<
+    Database,
+    "public" | "spotify_cache" | "spotify_auth"
+  >;
+} => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
