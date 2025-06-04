@@ -61,14 +61,12 @@ export const getPlaylistData = async ({
     getPlaylistTracks(spotifyClient, spotifyId, {
       limit: 50,
       offset,
-      fields: "items(track(id),episode(id))",
+      fields: "items(track(id))",
     }),
   );
-  const newTrackIds: string[] = (await iterator.collect()).map(
-    // Soundify doesn't have a type for episodes yet
-    // deno-lint-ignore no-explicit-any
-    (item) => item.track?.id || (item as any).episode?.id,
-  );
+  const newTrackIds: string[] = (await iterator.collect())
+    .map((item) => item.track?.id)
+    .filter(Boolean);
 
   // Insert new playlist data into cache
   const { data: newRow, error } = await supabaseClient

@@ -8,7 +8,13 @@ import { getAllTrackIds } from "@/shared/spotify-data-fetchers/get-all-track-ids
 import { HTTPException } from "@hono/http-exception";
 import { BlankEnv, H, HandlerResponse } from "@hono/hono/types";
 import { Schema } from "@/shared/schema.ts";
-import { Database } from "@/shared/database.gen.ts";
+import {
+  addItemsToPlaylist,
+  removePlaylistItems,
+} from "npm:@soundify/web-api@1.1.5";
+import { setupSpotifyClientWithoutTokens } from "@/shared/setup-spotify-client.ts";
+import { chunkArray } from "@/shared/chunk-array.ts";
+import { getPlaylistData } from "@/shared/spotify-data-fetchers/get-playlist-data.ts";
 
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
@@ -42,7 +48,7 @@ export const RunModule: H<
     .eq("id", moduleId);
 
   try {
-    const { data, error } = await serviceRoleSupabaseClient
+    const { data: moduleData, error } = await serviceRoleSupabaseClient
       .schema("public")
       .rpc("GetModuleRunData", { moduleId, callerUserId: user.id });
 
@@ -56,9 +62,6 @@ export const RunModule: H<
         message: error.message,
       });
     }
-
-    const moduleData: Database["public"]["Functions"]["GetModuleRunData"]["Returns"] =
-      data;
 
     if (!moduleData) {
       throw new HTTPException(500, {
@@ -120,7 +123,67 @@ export const RunModule: H<
       }
     });
 
-    // TODO: write result to outputs
+    const spotifyClient = await setupSpotifyClientWithoutTokens({
+      supabaseClient: serviceRoleSupabaseClient,
+      userId: user.id,
+    });
+
+    const trackIdBatches = chunkArray(workingTrackIds, 100);
+
+    moduleData.moduleOutputs?.forEach(async (output) => {
+      switch (output.type) {
+        case "PLAYLIST": {
+          switch (output.mode) {
+            case "APPEND": {
+              trackIdBatches.forEach(async (batch) => {
+                await addItemsToPlaylist(
+                  spotifyClient,
+                  output.spotify_id,
+                  batch.map((id) => `spotify:track:${id}`),
+                );
+              });
+              return;
+            }
+            case "PREPEND": {
+              trackIdBatches.toReversed().forEach(async (batch) => {
+                await addItemsToPlaylist(
+                  spotifyClient,
+                  output.spotify_id,
+                  batch.map((id) => `spotify:track:${id}`),
+                  0,
+                );
+              });
+              return;
+            }
+            case "REPLACE": {
+              const { data: playlist } = await getPlaylistData({
+                spotifyId: output.spotify_id,
+                supabaseClient: serviceRoleSupabaseClient,
+                userId: user.id,
+                spotifyClient,
+              });
+              const playlistTrackBatches = chunkArray(playlist.track_ids, 100);
+              playlistTrackBatches.forEach(async (batch) => {
+                await removePlaylistItems(
+                  spotifyClient,
+                  output.spotify_id,
+                  batch.map((id) => `spotify:track:${id}`),
+                );
+              });
+              trackIdBatches.forEach(async (batch) => {
+                await addItemsToPlaylist(
+                  spotifyClient,
+                  output.spotify_id,
+                  batch.map((id) => `spotify:track:${id}`),
+                );
+              });
+            }
+          }
+        }
+      }
+    });
+
+    return ctx.json({}, 201);
   } finally {
     await serviceRoleSupabaseClient
       .schema("public")
