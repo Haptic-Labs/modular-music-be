@@ -1,7 +1,7 @@
 import { HTTPException } from "@hono/http-exception";
-import { Database } from "../database.gen.ts";
+import type { Database } from "../database.gen.ts";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
-import { SpotifyDataFetcherArgs } from "../types.ts";
+import type { SpotifyDataFetcherArgs } from "../types.ts";
 import { getUserLatestRecentlyListened } from "../get-user-latest-recently-listened.ts";
 
 const MS_IN_DAY = 1 * 24 * 60 * 60 * 1000; // 1 day in milliseconds

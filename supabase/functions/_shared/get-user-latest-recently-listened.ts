@@ -1,7 +1,7 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { SchemaName } from "./constants.ts";
-import { Database } from "./database.gen.ts";
-import { getRecentPlayedTracks, SpotifyClient } from "@soundify/web-api";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SchemaName } from "./constants.ts";
+import type { Database } from "./database.gen.ts";
+import { getRecentPlayedTracks, type SpotifyClient } from "@soundify/web-api";
 import { HTTPException } from "@hono/http-exception";
 
 type GetUserLatestRecentlyListenedArgs = {

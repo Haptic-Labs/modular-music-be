@@ -1,9 +1,9 @@
 import { getPlaylist, getPlaylistTracks } from "@soundify/web-api";
-import { Database } from "../database.gen.ts";
+import type { Database } from "../database.gen.ts";
 import { PageIterator } from "@soundify/pagination";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
 import { HTTPException } from "@hono/http-exception";
-import { SpotifyDataFetcherArgs } from "../types.ts";
+import type { SpotifyDataFetcherArgs } from "../types.ts";
 
 type PlaylistQueryResult = {
   data: Database["spotify_cache"]["Tables"]["playlists"]["Row"];

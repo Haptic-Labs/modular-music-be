@@ -1,8 +1,8 @@
 import { HTTPException } from "@hono/http-exception";
 import { SpotifyClient } from "@soundify/web-api";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "./database.gen.ts";
-import { SchemaName } from "./constants.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
 import { spotifyTokenRefresher } from "./spotify-token-refresher.ts";
 import { getSpotifyToken } from "./get-spotify-token.ts";
 

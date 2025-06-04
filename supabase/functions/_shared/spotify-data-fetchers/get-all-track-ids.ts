@@ -1,5 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../database.gen.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../database.gen.ts";
 import { getPlaylistData } from "./get-playlist-data.ts";
 import { getAlbumData } from "./get-album-data.ts";
 import { getArtistData } from "./get-artist-data.ts";

@@ -1,4 +1,4 @@
-import { Database } from "./database.gen.ts";
+import type { Database } from "./database.gen.ts";
 
 export enum Routes {
   GetPlaylist = "/spotify/playlists/:playlistId",

@@ -1,9 +1,9 @@
-import { spotifyTokenRefresher } from "./../../_shared/spotify-token-refresher.ts";
-import { Schema } from "../../_shared/schema.ts";
+import { spotifyTokenRefresher } from "@/shared/spotify-token-refresher.ts";
+import { Schema } from "@/shared/schema.ts";
 import { HTTPException } from "@hono/http-exception";
-import { HonoFn } from "../../_shared/types.ts";
-import { validateAuth } from "../../_shared/validate-auth.ts";
-import { setupSupabase } from "../../_shared/setup-supabase.ts";
+import { HonoFn } from "@/shared/types.ts";
+import { validateAuth } from "@/shared/validate-auth.ts";
+import { setupSupabase } from "@/shared/setup-supabase.ts";
 
 export const RefreshToken: HonoFn<"RefreshToken"> = async (ctx) => {
   const { authHeader } = validateAuth(ctx);

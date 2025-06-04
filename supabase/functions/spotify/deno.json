@@ -8,6 +8,7 @@
     "@hono/types": "jsr:@hono/hono@4.4.8/types",
     "@hono/validator": "jsr:@hono/hono@4.4.8/validator",
     "@soundify/web-api": "npm:@soundify/web-api@1.1.5",
-    "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination"
+    "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination",
+    "@/shared/": "../_shared/"
   }
 }

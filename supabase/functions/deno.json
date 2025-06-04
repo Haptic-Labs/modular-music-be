@@ -1,0 +1,8 @@
+{
+  "workspace": ["./_shared", "./modules", "./spotify"],
+  "imports": {
+    "@shared/": "./_shared/",
+    "@modules/": "./modules/",
+    "@other/": "./other/"
+  }
+}

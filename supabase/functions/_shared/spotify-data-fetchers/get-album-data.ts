@@ -1,6 +1,6 @@
 import { HTTPException } from "@hono/http-exception";
-import { Database } from "../database.gen.ts";
-import { SpotifyDataFetcherArgs } from "../types.ts";
+import type { Database } from "../database.gen.ts";
+import type { SpotifyDataFetcherArgs } from "../types.ts";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
 import { PageIterator } from "@soundify/pagination";
 import { getAlbumTracks } from "@soundify/web-api";

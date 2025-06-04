@@ -1,17 +1,17 @@
-import { saveAllUserTracks } from "./../../_shared/save-all-user-tracks.ts";
-import { HonoFn } from "../../_shared/types.ts";
-import { validateAuth } from "../../_shared/validate-auth.ts";
-import { setupSupabase } from "../../_shared/setup-supabase.ts";
-import { getSpotifyToken } from "../../_shared/get-spotify-token.ts";
-import { setupSpotifyClient } from "../../_shared/setup-spotify-client.ts";
-import { Schema } from "../../_shared/schema.ts";
-import { Database } from "../../_shared/database.gen.ts";
+import { saveAllUserTracks } from "@/shared/save-all-user-tracks.ts";
+import { HonoFn } from "@/shared/types.ts";
+import { validateAuth } from "@/shared/validate-auth.ts";
+import { setupSupabase } from "@/shared/setup-supabase.ts";
+import { getSpotifyToken } from "@/shared/get-spotify-token.ts";
+import { setupSpotifyClient } from "@/shared/setup-spotify-client.ts";
+import { Schema } from "@/shared/schema.ts";
+import { Database } from "@/shared/database.gen.ts";
 import {
   SPOTIFY_TRACK_CHECK_LIMIT,
   SUPABASE_MAX_ROWS,
-} from "../../_shared/constants.ts";
+} from "@/shared/constants.ts";
 import { HTTPException } from "@hono/http-exception";
-import { trueRandomShuffle } from "../../_shared/shuffles/true-random-shuffle.ts";
+import { trueRandomShuffle } from "@/shared/shuffles/true-random-shuffle.ts";
 import { checkIfTracksSaved } from "@soundify/web-api";
 
 // TODO: refactor this file to use abstracted `getUserTracks` spotify data fetcher

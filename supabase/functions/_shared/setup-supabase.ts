@@ -1,7 +1,11 @@
 import { HTTPException } from "@hono/http-exception";
-import { Database } from "./database.gen.ts";
-import { SchemaName } from "./constants.ts";
-import { SupabaseClient, User, createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
+import {
+  type SupabaseClient,
+  type User,
+  createClient,
+} from "@supabase/supabase-js";
 
 export const setupSupabase = ({ authHeader }: { authHeader?: string }) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");

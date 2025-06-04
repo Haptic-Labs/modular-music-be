@@ -1,7 +1,7 @@
 import "@supabase/edge-runtime";
 import { Hono } from "@hono/hono";
-import { HONO_CORS } from "../_shared/cors.ts";
-import { Routes } from "../_shared/schema.ts";
+import { HONO_CORS } from "@/shared/cors.ts";
+import { Routes } from "@/shared/schema.ts";
 
 const server = new Hono();
 

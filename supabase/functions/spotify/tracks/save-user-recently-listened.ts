@@ -1,11 +1,11 @@
-import { getUserLatestRecentlyListened } from "./../../_shared/get-user-latest-recently-listened.ts";
-import { setupSupabase } from "./../../_shared/setup-supabase.ts";
-import { validateAuth } from "../../_shared/validate-auth.ts";
-import { HonoFn } from "../../_shared/types.ts";
-import { getSpotifyToken } from "../../_shared/get-spotify-token.ts";
-import { setupSpotifyClient } from "../../_shared/setup-spotify-client.ts";
+import { getUserLatestRecentlyListened } from "@/shared/get-user-latest-recently-listened.ts";
+import { setupSupabase } from "@/shared/setup-supabase.ts";
+import { validateAuth } from "@/shared/validate-auth.ts";
+import { HonoFn } from "@/shared/types.ts";
+import { getSpotifyToken } from "@/shared/get-spotify-token.ts";
+import { setupSpotifyClient } from "@/shared/setup-spotify-client.ts";
 import { HTTPException } from "@hono/http-exception";
-import { chunkArray } from "../../_shared/chunk-array.ts";
+import { chunkArray } from "@/shared/chunk-array.ts";
 
 const GROUP_LENGTH = 20;
 

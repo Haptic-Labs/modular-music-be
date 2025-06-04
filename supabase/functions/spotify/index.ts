@@ -1,18 +1,18 @@
-import '@supabase/edge-runtime';
-import { Hono } from '@hono/hono';
-import { HONO_CORS } from '../_shared/cors.ts';
-import { Routes } from '../_shared/schema.ts';
-import { GetPlaylist } from './playlists/get-playlist.ts';
-import { RefreshToken } from './auth/refresh-token.ts';
-import { GetUserTracks } from './tracks/get-user-tracks.ts';
-import { GetUserToken } from './auth/get-user-token.ts';
-import { GetAlbumTracks } from './albums/get-album-tracks.ts';
-import { GetArtistTracks } from './artists/get-artist-tracks.ts';
-import { SaveUserRecentlyListened } from './tracks/save-user-recently-listened.ts';
+import "@supabase/edge-runtime";
+import { Hono } from "@hono/hono";
+import { HONO_CORS } from "@/shared/cors.ts";
+import { Routes } from "@/shared/schema.ts";
+import { GetPlaylist } from "./playlists/get-playlist.ts";
+import { RefreshToken } from "./auth/refresh-token.ts";
+import { GetUserTracks } from "./tracks/get-user-tracks.ts";
+import { GetUserToken } from "./auth/get-user-token.ts";
+import { GetAlbumTracks } from "./albums/get-album-tracks.ts";
+import { GetArtistTracks } from "./artists/get-artist-tracks.ts";
+import { SaveUserRecentlyListened } from "./tracks/save-user-recently-listened.ts";
 
 const server = new Hono();
 
-server.use('*', HONO_CORS);
+server.use("*", HONO_CORS);
 
 server.get(Routes.GetPlaylist, GetPlaylist);
 server.post(Routes.RefreshToken, RefreshToken);

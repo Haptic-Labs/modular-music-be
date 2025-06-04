@@ -1,5 +1,5 @@
 import { HTTPException } from "@hono/http-exception";
-import { SpotifyDataFetcherArgs } from "../types.ts";
+import type { SpotifyDataFetcherArgs } from "../types.ts";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
 import { PageIterator } from "@soundify/pagination";
 import { getArtistAlbums } from "@soundify/web-api";

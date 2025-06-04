@@ -1,4 +1,6 @@
 {
+  "name": "@modular-music-be/shared",
+  "exports": "./mod.ts",
   "imports": {
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
     "@supabase/edge-runtime": "jsr:@supabase/functions-js/edge-runtime.d.ts",

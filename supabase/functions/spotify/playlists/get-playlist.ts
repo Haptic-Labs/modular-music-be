@@ -1,10 +1,10 @@
-import { getSpotifyToken } from "./../../_shared/get-spotify-token.ts";
+import { getSpotifyToken } from "@/shared/get-spotify-token.ts";
 import { HTTPException } from "@hono/http-exception";
-import { HonoFn } from "../../_shared/types.ts";
-import { validateAuth } from "../../_shared/validate-auth.ts";
-import { setupSupabaseWithUser } from "../../_shared/setup-supabase.ts";
-import { setupSpotifyClient } from "../../_shared/setup-spotify-client.ts";
-import { getPlaylistData } from "../../_shared/spotify-data-fetchers/get-playlist-data.ts";
+import { HonoFn } from "@/shared/types.ts";
+import { validateAuth } from "@/shared/validate-auth.ts";
+import { setupSupabaseWithUser } from "@/shared/setup-supabase.ts";
+import { setupSpotifyClient } from "@/shared/setup-spotify-client.ts";
+import { getPlaylistData } from "@/shared/spotify-data-fetchers/get-playlist-data.ts";
 
 /**
  * HTTP handler for getting playlist data

@@ -1,8 +1,8 @@
 import { HTTPException } from "@hono/http-exception";
-import { SpotifyDataFetcherArgs } from "../types.ts";
+import type { SpotifyDataFetcherArgs } from "../types.ts";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
 import { saveAllUserTracks } from "../save-all-user-tracks.ts";
-import { Database } from "../database.gen.ts";
+import type { Database } from "../database.gen.ts";
 import { SPOTIFY_TRACK_CHECK_LIMIT, SUPABASE_MAX_ROWS } from "../constants.ts";
 import { checkIfTracksSaved } from "@soundify/web-api";
 
