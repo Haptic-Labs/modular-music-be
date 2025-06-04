@@ -63,7 +63,7 @@ export const getRecentlyListenedData = async ({
     .schema("public")
     .from("recently_played_source_configs")
     .select("*")
-    .eq("source_id", sourceId)
+    .eq("id", sourceId)
     .single();
 
   if (!config || configError) {

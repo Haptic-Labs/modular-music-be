@@ -52,10 +52,7 @@ export const setupSupabaseWithUser = async ({
 };
 
 export const setupSupabaseWithServiceRole = (): {
-  serviceRoleSupabaseClient: SupabaseClient<
-    Database,
-    "public" | "spotify_cache" | "spotify_auth"
-  >;
+  serviceRoleSupabaseClient: SupabaseClient<Database>;
 } => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -66,11 +63,10 @@ export const setupSupabaseWithServiceRole = (): {
     throw new HTTPException(500, { message });
   }
 
-  const serviceRoleSupabaseClient = createClient<
-    Database,
-    SchemaName,
-    Database[SchemaName]
-  >(supabaseUrl, serviceRoleKey);
+  const serviceRoleSupabaseClient = createClient<Database>(
+    supabaseUrl,
+    serviceRoleKey,
+  );
 
   return { serviceRoleSupabaseClient };
 };

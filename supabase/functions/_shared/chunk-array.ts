@@ -5,7 +5,7 @@ export const chunkArray = <T>(array: T[], size = 1): T[][] => {
   if (!array.length || intSize < 1) return result;
 
   for (let i = 0; i < array.length; i += intSize) {
-    result.push(array.slice(i, intSize));
+    result.push(array.slice(i, i + intSize));
   }
   return result;
 };

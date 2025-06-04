@@ -1,15 +1,4 @@
 {
-  "name": "@modular-music-be/shared",
-  "exports": "./mod.ts",
-  "imports": {
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
-    "@supabase/edge-runtime": "jsr:@supabase/functions-js/edge-runtime.d.ts",
-    "@hono/hono": "jsr:@hono/hono@4.4.8",
-    "@hono/cors": "jsr:@hono/hono@4.4.8/cors",
-    "@hono/http-exception": "jsr:@hono/hono@4.4.8/http-exception",
-    "@hono/types": "jsr:@hono/hono@4.4.8/types",
-    "@hono/validator": "jsr:@hono/hono@4.4.8/validator",
-    "@soundify/web-api": "npm:@soundify/web-api@1.1.5",
-    "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination"
-  }
+  "deno": "1.45.2",
+  "version": "0.0.0"
 }

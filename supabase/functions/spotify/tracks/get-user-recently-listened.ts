@@ -1,10 +1,10 @@
-import { getUserLatestRecentlyListened } from "@/shared/get-user-latest-recently-listened.ts";
-import { setupSpotifyClient } from "@/shared/setup-spotify-client.ts";
-import { setupSupabase } from "@/shared/setup-supabase.ts";
-import { validateAuth } from "@/shared/validate-auth.ts";
-import { HonoFn } from "@/shared/types.ts";
-import { getSpotifyToken } from "@/shared/get-spotify-token.ts";
-import { Schema } from "@/shared/schema.ts";
+import { getUserLatestRecentlyListened } from "@shared/get-user-latest-recently-listened.ts";
+import { setupSpotifyClient } from "@shared/setup-spotify-client.ts";
+import { setupSupabase } from "@shared/setup-supabase.ts";
+import { validateAuth } from "@shared/validate-auth.ts";
+import { HonoFn } from "@shared/types.ts";
+import { getSpotifyToken } from "@shared/get-spotify-token.ts";
+import { Schema } from "@shared/schema.ts";
 import { HTTPException } from "@hono/http-exception";
 
 export const GetUserRecentlyListened: HonoFn<

@@ -1,6 +1,5 @@
 import { getPlaylist, getPlaylistTracks } from "@soundify/web-api";
 import type { Database } from "../database.gen.ts";
-import { PageIterator } from "@soundify/pagination";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
 import { HTTPException } from "@hono/http-exception";
 import type { SpotifyDataFetcherArgs } from "../types.ts";
@@ -57,24 +56,36 @@ export const getPlaylistData = async ({
   }
 
   // Fetch all track IDs from the playlist
-  const iterator = new PageIterator((offset) =>
-    getPlaylistTracks(spotifyClient, spotifyId, {
-      limit: 50,
-      offset,
+  const trackIds: string[] = [];
+  let hasAllTracks = false;
+  const pageLimit = 50;
+  while (!hasAllTracks) {
+    const nextPage = await getPlaylistTracks(spotifyClient, spotifyId, {
+      limit: pageLimit,
+      offset: trackIds.length,
       fields: "items(track(id))",
-    }),
-  );
-  const newTrackIds: string[] = (await iterator.collect())
-    .map((item) => item.track?.id)
-    .filter(Boolean);
+    });
+    trackIds.push(
+      ...nextPage.items.map((item) => item.track?.id).filter(Boolean),
+    );
+    if (nextPage.items.length < pageLimit) {
+      hasAllTracks = true;
+    }
+  }
 
+  // Delete cached playlist if it exists because it is outdated
+  await supabaseClient
+    .schema("spotify_cache")
+    .from("playlists")
+    .delete()
+    .eq("playlist_id", spotifyId);
   // Insert new playlist data into cache
   const { data: newRow, error } = await supabaseClient
     .schema("spotify_cache")
     .from("playlists")
     .insert({
       playlist_id: spotifyId,
-      track_ids: newTrackIds,
+      track_ids: trackIds,
       snapshot_id: currentSnapshotId,
       user_id: currentPlaylist.public ? null : currentPlaylist.owner.id,
     })

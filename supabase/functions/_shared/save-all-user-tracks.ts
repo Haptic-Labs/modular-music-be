@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "./database.gen.ts";
-import { SPOTIFY_GET_TRACKS_LIMIT, type SchemaName } from "./constants.ts";
+import {
+  SPOTIFY_GET_TRACKS_LIMIT,
+  type SchemaName,
+} from "@shared/constants.ts";
 import { type SpotifyClient, getSavedTracks } from "@soundify/web-api";
 import { HTTPException } from "@hono/http-exception";
 

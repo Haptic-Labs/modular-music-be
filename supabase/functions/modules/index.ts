@@ -1,13 +1,14 @@
 import "@supabase/edge-runtime";
 import { Hono } from "@hono/hono";
-import { HONO_CORS } from "@/shared/cors.ts";
-import { Routes } from "@/shared/schema.ts";
+import { HONO_CORS } from "@shared/cors.ts";
+import { Routes } from "@shared/schema.ts";
+import { RunModule } from "@modules/:moduleId/run.ts";
 
 const server = new Hono();
 
 server.use("*", HONO_CORS);
 
-server.post(Routes.RunModule);
+server.post(Routes.RunModule, RunModule);
 
 Deno.serve(server.fetch);
 

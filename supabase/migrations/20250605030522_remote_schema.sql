@@ -130,7 +130,8 @@ CREATE TYPE "public"."CombineSourceUpsertRequest" AS (
 	"source_type" "public"."SPOTIFY_SOURCE_TYPE",
 	"spotify_id" "text",
 	"limit" smallint,
-	"title" "text"
+	"title" "text",
+	"image_url" "text"
 );
 
 
@@ -226,7 +227,7 @@ CREATE TABLE IF NOT EXISTS "public"."combine_action_sources" (
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone,
     "source_type" "public"."SPOTIFY_SOURCE_TYPE" NOT NULL,
-    "spotify_id" "text" NOT NULL,
+    "spotify_id" "text",
     "limit" smallint,
     "deleted_at" timestamp with time zone,
     "title" "text",
@@ -358,6 +359,47 @@ CREATE TYPE "public"."ModuleActions" AS (
 ALTER TYPE "public"."ModuleActions" OWNER TO "postgres";
 
 
+CREATE TYPE "public"."SCHEDULE_INTERVAL" AS ENUM (
+    'DAYS',
+    'WEEKS',
+    'MONTHS',
+    'YEARS'
+);
+
+
+ALTER TYPE "public"."SCHEDULE_INTERVAL" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."ModuleScheduleConfig" AS (
+	"interval" "public"."SCHEDULE_INTERVAL",
+	"quantity" smallint
+);
+
+
+ALTER TYPE "public"."ModuleScheduleConfig" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."SPOTIFY_OUTPUT_TYPE" AS ENUM (
+    'PLAYLIST'
+);
+
+
+ALTER TYPE "public"."SPOTIFY_OUTPUT_TYPE" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."limit_action_configs" (
+    "id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone,
+    "limit" smallint NOT NULL,
+    "type" "public"."LIMIT_TYPE" DEFAULT 'OVERALL'::"public"."LIMIT_TYPE" NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."limit_action_configs" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."module_actions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "module_id" "uuid" NOT NULL,
@@ -372,6 +414,100 @@ CREATE TABLE IF NOT EXISTS "public"."module_actions" (
 ALTER TABLE "public"."module_actions" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."module_outputs" (
+    "module_id" "uuid" NOT NULL,
+    "type" "public"."SPOTIFY_OUTPUT_TYPE" NOT NULL,
+    "spotify_id" "text" NOT NULL,
+    "limit" integer,
+    "mode" "public"."MODULE_OUTPUT_MODE" NOT NULL,
+    "de_dupe" boolean NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone,
+    "deleted_at" timestamp with time zone,
+    "image_url" "text",
+    "title" "text" NOT NULL,
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL
+);
+
+
+ALTER TABLE "public"."module_outputs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."module_sources" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "module_id" "uuid" NOT NULL,
+    "type" "public"."SPOTIFY_SOURCE_TYPE" NOT NULL,
+    "spotify_id" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone,
+    "deleted_at" timestamp with time zone,
+    "limit" integer,
+    "image_url" "text",
+    "title" "text" NOT NULL
+);
+
+
+ALTER TABLE "public"."module_sources" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."modules" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "name" "text" NOT NULL,
+    "updated_at" timestamp with time zone,
+    "is_running" boolean DEFAULT false NOT NULL,
+    "next_scheduled_run" timestamp with time zone,
+    "deleted_at" timestamp with time zone,
+    "schedule_config" "public"."ModuleScheduleConfig",
+    "previous_run" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."modules" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."recently_played_source_configs" (
+    "id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone,
+    "quantity" smallint NOT NULL,
+    "interval" "public"."RECENTLY_PLAYED_INTERVAL" NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."recently_played_source_configs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."shuffle_action_configs" (
+    "id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone,
+    "shuffle_type" "public"."SHUFFLE_TYPE" NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."shuffle_action_configs" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."ModuleRunData" AS (
+	"module" "public"."modules",
+	"moduleSources" "public"."module_sources"[],
+	"moduleActions" "public"."module_actions"[],
+	"moduleOutputs" "public"."module_outputs"[],
+	"limitConfigs" "public"."limit_action_configs"[],
+	"recentlyPlayedConfigs" "public"."recently_played_source_configs"[],
+	"shuffleConfigs" "public"."shuffle_action_configs"[],
+	"filterSources" "public"."filter_action_sources"[],
+	"combineSources" "public"."combine_action_sources"[]
+);
+
+
+ALTER TYPE "public"."ModuleRunData" OWNER TO "postgres";
+
+
 CREATE TYPE "public"."RemoveModuleActionResponse" AS (
 	"updated_actions" "public"."module_actions"[],
 	"module_id" "uuid"
@@ -379,14 +515,6 @@ CREATE TYPE "public"."RemoveModuleActionResponse" AS (
 
 
 ALTER TYPE "public"."RemoveModuleActionResponse" OWNER TO "postgres";
-
-
-CREATE TYPE "public"."SPOTIFY_OUTPUT_TYPE" AS ENUM (
-    'PLAYLIST'
-);
-
-
-ALTER TYPE "public"."SPOTIFY_OUTPUT_TYPE" OWNER TO "postgres";
 
 
 CREATE TYPE "public"."SimpleSource" AS (
@@ -435,6 +563,7 @@ ALTER TYPE "public"."recently_listened_source_with_config" OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."GetCombineAction"("actionId" "uuid") RETURNS "public"."ModuleAction:Combine"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   result public."ModuleAction:Combine";
@@ -467,6 +596,7 @@ ALTER FUNCTION "public"."GetCombineAction"("actionId" "uuid") OWNER TO "postgres
 
 CREATE OR REPLACE FUNCTION "public"."GetFilterAction"("actionId" "uuid") RETURNS "public"."ModuleAction:Filter"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   result public."ModuleAction:Filter";
@@ -499,6 +629,7 @@ ALTER FUNCTION "public"."GetFilterAction"("actionId" "uuid") OWNER TO "postgres"
 
 CREATE OR REPLACE FUNCTION "public"."GetLimitAction"("actionId" "uuid") RETURNS "public"."ModuleAction:Limit"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   result public."ModuleAction:Limit";
@@ -537,6 +668,7 @@ ALTER FUNCTION "public"."GetLimitAction"("actionId" "uuid") OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."GetModuleActions"("moduleId" "uuid") RETURNS "public"."ModuleActions"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   actions public.module_actions[];
@@ -582,8 +714,167 @@ $$;
 ALTER FUNCTION "public"."GetModuleActions"("moduleId" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."GetModuleRunData"("moduleId" "uuid", "callerUserId" "uuid") RETURNS "public"."ModuleRunData"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+    module public.modules;
+    "moduleSources" public.module_sources[];
+    "moduleActions" public.module_actions[];
+    "moduleOutputs" public.module_outputs[];
+    "limitConfigs" public.limit_action_configs[];
+    "recentlyPlayedConfigs" public.recently_played_source_configs[];
+    "shuffleConfigs" public.shuffle_action_configs[];
+    "filterSources" public.filter_action_sources[];
+    "combineSources" public.combine_action_sources[];
+    result public."ModuleRunData";
+BEGIN
+    -- Validate moduleId
+    IF "moduleId" IS NULL THEN
+        RAISE EXCEPTION 'Missing required field: ''moduleId''' USING ERRCODE = '400';
+    END IF;
+
+    -- Fetch the module
+    SELECT * INTO module FROM public.modules WHERE id = "moduleId" AND deleted_at IS NULL;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Module with provided id does not exist' USING ERRCODE = '422';
+    END IF;
+
+    -- Check if the caller's user_id matches the module's user_id
+    IF module.user_id <> "callerUserId" THEN
+        RAISE EXCEPTION 'Permission denied: You do not have permission to run this module' USING ERRCODE = '403';
+    END IF;
+
+    -- Fetch module sources
+    SELECT ARRAY(
+        SELECT ROW(ms.*)::public.module_sources 
+        FROM public.module_sources ms 
+        WHERE ms.module_id = "moduleId" AND ms.deleted_at IS NULL
+    ) INTO "moduleSources";
+    IF array_length("moduleSources", 1) IS NULL THEN
+        RAISE EXCEPTION 'Error running module: no sources found' USING ERRCODE = '409';
+    END IF;
+
+    -- Fetch module actions
+    SELECT ARRAY(
+        SELECT ROW(ma.*)
+        FROM public.module_actions ma 
+        WHERE ma.module_id = "moduleId" AND ma.deleted_at IS NULL
+        ORDER BY ma."order"
+    ) INTO "moduleActions";
+    IF array_length("moduleActions", 1) IS NULL THEN
+        RAISE EXCEPTION 'Error running module: no actions found' USING ERRCODE = '409';
+    END IF;
+
+    -- Fetch module outputs
+    SELECT ARRAY(
+        SELECT ROW(mo.*) 
+        FROM public.module_outputs mo
+        WHERE mo.module_id = "moduleId" AND mo.deleted_at IS NULL
+    ) INTO "moduleOutputs";
+    IF array_length("moduleOutputs", 1) IS NULL THEN
+        RAISE EXCEPTION 'Error running module: no outputs found' USING ERRCODE = '409';
+    END IF;
+
+    -- Fetch limit configs from module actions that have sources
+    SELECT ARRAY(
+        SELECT ROW(lac.*)
+        FROM public.limit_action_configs lac
+        WHERE id IN (
+            SELECT lac.id 
+            FROM public.module_actions ma
+            WHERE ma.module_id = "moduleId" AND deleted_at IS NULL AND ma.type = 'LIMIT'
+        )
+    ) INTO "limitConfigs";
+
+    -- Fetch recently_played_source_configs from module sources
+    SELECT ARRAY(
+        SELECT ROW(rpsc.*)
+        FROM public.recently_played_source_configs rpsc 
+        WHERE id IN (
+            SELECT id
+            FROM public.module_sources ms 
+            WHERE ms.module_id = "moduleId" AND deleted_at IS NULL
+        )
+    ) INTO "recentlyPlayedConfigs";
+
+    -- Fetch recently_played_source_configs from module actions that have sources
+    -- Combine actions
+    SELECT ARRAY(
+        SELECT ROW(rpsc.*) 
+        FROM public.recently_played_source_configs rpsc 
+        WHERE id IN (
+            SELECT id
+            FROM public.combine_action_sources cas
+            WHERE cas.action_id IN (
+                SELECT id
+                FROM public.module_actions ma
+                WHERE ma.module_id = "moduleId" AND deleted_at IS NULL AND ma.type = 'COMBINE'
+            ) AND cas.deleted_at IS NULL AND cas.source_type = 'RECENTLY_PLAYED'
+        ) AND rpsc.deleted_at IS NULL
+    ) INTO "recentlyPlayedConfigs";
+    -- Filter actions
+    SELECT ARRAY(
+        SELECT ROW(rpsc.*)
+        FROM public.recently_played_source_configs rpsc
+        WHERE id IN (
+            SELECT id
+            FROM public.filter_action_sources fas
+            WHERE fas.action_id IN (
+                SELECT id
+                FROM public.module_actions ma
+                WHERE ma.module_id = "moduleId" AND deleted_at IS NULL AND ma.type = 'FILTER'
+            ) AND fas.deleted_at IS NULL AND fas.source_type = 'RECENTLY_PLAYED'
+        ) and rpsc.deleted_at IS NULL
+    ) INTO "recentlyPlayedConfigs";
+
+    -- Fetch shuffle action configs
+    SELECT ARRAY(
+        SELECT ROW(sac.*)
+        FROM public.shuffle_action_configs sac
+        WHERE id IN (
+            SELECT id
+            FROM public.module_actions ma
+            WHERE ma.module_id = "moduleId" AND deleted_at IS NULL AND ma.type = 'SHUFFLE'
+        ) AND sac.deleted_at IS NULL
+    ) into "shuffleConfigs";
+
+    -- Fetch filter sources
+    SELECT ARRAY(
+        SELECT ROW(fas.*)
+        FROM public.filter_action_sources fas
+        WHERE fas.action_id IN (
+            SELECT id
+            FROM public.module_actions ma
+            WHERE ma.module_id = "moduleId" AND ma.deleted_at IS NULL AND ma.type = 'FILTER'
+        ) AND fas.deleted_at IS NULL
+    ) INTO "filterSources";
+
+    -- Fetch combine sources
+    SELECT ARRAY(
+        SELECT ROW(cas.*)
+        FROM public.combine_action_sources cas
+        WHERE cas.action_id IN (
+            SELECT id
+            FROM public.module_actions ma
+            WHERE ma.module_id = "moduleId" AND ma.deleted_at IS NULL AND ma.type = 'COMBINE'
+        ) AND cas.deleted_at IS NULL
+    ) INTO "combineSources";
+
+    result := ROW(module, "moduleSources", "moduleActions", "moduleOutputs", "limitConfigs", "recentlyPlayedConfigs", "shuffleConfigs", "filterSources", "combineSources")::public."ModuleRunData";
+
+    RETURN result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."GetModuleRunData"("moduleId" "uuid", "callerUserId" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."GetShuffleAction"("actionId" "uuid") RETURNS "public"."ModuleAction:Shuffle"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   result public."ModuleAction:Shuffle";
@@ -662,6 +953,7 @@ ALTER FUNCTION "public"."PersistActionDeletedAt"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."PersistRecentlyListenedDeletedAt"() RETURNS "trigger"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
     -- Update the deleted_at value in recently_played_source_configs if it matches the id
@@ -718,6 +1010,7 @@ ALTER FUNCTION "public"."PersistSourceIdsUpdate"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."RemoveModuleAction"("actionId" "uuid") RETURNS "public"."RemoveModuleActionResponse"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
   "deletedAction" public.module_actions%ROWTYPE;
@@ -769,11 +1062,12 @@ ALTER FUNCTION "public"."RemoveModuleAction"("actionId" "uuid") OWNER TO "postgr
 
 CREATE OR REPLACE FUNCTION "public"."ReorderActions"("action_ids" "uuid"[]) RETURNS "public"."module_actions"[]
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     idx INT;
     temp_idx INT;
-    updated_actions module_actions[];
+    updated_actions public.module_actions[];
 BEGIN
     FOR temp_idx IN 1 .. array_length(action_ids, 1) LOOP
         UPDATE public.module_actions
@@ -803,8 +1097,9 @@ $$;
 ALTER FUNCTION "public"."ReorderActions"("action_ids" "uuid"[]) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "id" "uuid" DEFAULT "gen_random_uuid"()) RETURNS "public"."ModuleAction:Combine"
+CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "actionId" "uuid" DEFAULT "gen_random_uuid"()) RETURNS "public"."ModuleAction:Combine"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     result public."ModuleAction:Combine";
@@ -828,18 +1123,18 @@ BEGIN
         IF current_source.source_type IS NULL THEN
             RAISE EXCEPTION 'Non-nullable field "source_type" in source cannot be null';
         END IF;
-        IF current_source.spotify_id IS NULL THEN
+        IF current_source.source_type <> 'LIKED_SONGS' AND current_source.source_type <> 'RECENTLY_PLAYED' AND current_source.spotify_id IS NULL THEN
             RAISE EXCEPTION 'Non-nullable field "spotify_id" in source cannot be null';
         END IF;
     END LOOP;
 
     -- Upsert the action into the module_actions table
     INSERT INTO public.module_actions (id, module_id, "order", type, created_at, updated_at, deleted_at)
-    VALUES (id, module_id, "order", 'COMBINE', now(), NULL, NULL)
+    VALUES ("actionId", module_id, "order", 'COMBINE', now(), NULL, NULL)
     ON CONFLICT (id) DO UPDATE
     SET module_id = EXCLUDED.module_id,
-        "order" = EXCLUEDED."order",
-        type = EXCLUEDED.type,
+        "order" = EXCLUDED."order",
+        type = EXCLUDED.type,
         updated_at = now()
     RETURNING * INTO result;
 
@@ -849,15 +1144,16 @@ BEGIN
     -- Upsert each source in the sources array
     FOREACH current_source IN ARRAY sources
     LOOP
-        INSERT INTO public.combine_action_sources (id, action_id, created_at, updated_at, source_type, spotify_id, "limit", deleted_at, title)
-        VALUES (COALESCE(current_source.id, gen_random_uuid()), result.id, now(), NULL, current_source.source_type, current_source.spotify_id, current_source."limit", NULL, current_source.title)
+        INSERT INTO public.combine_action_sources (id, action_id, created_at, updated_at, source_type, spotify_id, "limit", deleted_at, title, image_url)
+        VALUES (COALESCE(current_source.id, gen_random_uuid()), result.id, now(), NULL, current_source.source_type, current_source.spotify_id, current_source."limit", NULL, current_source.title, current_source.image_url)
         ON CONFLICT (id) DO UPDATE
         SET action_id = EXCLUDED.action_id,
             updated_at = now(),
             source_type = EXCLUDED.source_type,
             spotify_id = EXCLUDED.spotify_id,
             "limit" = EXCLUDED."limit",
-            title = EXCLUDED.title
+            title = EXCLUDED.title,
+            image_url = EXCLUDED.image_url
         RETURNING * INTO upserted_source;
 
         -- Append the upserted source to the result.sources array
@@ -869,11 +1165,12 @@ END;
 $$;
 
 
-ALTER FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "id" "uuid") OWNER TO "postgres";
+ALTER FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "actionId" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionFilter"("module_id" "uuid", "order" smallint, "sources" "public"."FilterSourceUpsertRequest"[], "action_id" "uuid" DEFAULT "gen_random_uuid"()) RETURNS "public"."ModuleAction:Filter"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     result public."ModuleAction:Filter";
@@ -986,8 +1283,9 @@ $$;
 ALTER FUNCTION "public"."UpsertModuleActionFilter"("module_id" "uuid", "order" smallint, "sources" "public"."FilterSourceUpsertRequest"[], "action_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "id" "uuid" DEFAULT "gen_random_uuid"(), "type" "public"."LIMIT_TYPE" DEFAULT 'OVERALL'::"public"."LIMIT_TYPE") RETURNS "public"."ModuleAction:Limit"
+CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "actionId" "uuid" DEFAULT "gen_random_uuid"(), "type" "public"."LIMIT_TYPE" DEFAULT 'OVERALL'::"public"."LIMIT_TYPE") RETURNS "public"."ModuleAction:Limit"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     result public."ModuleAction:Limit";
@@ -1006,7 +1304,7 @@ BEGIN
 
     -- Upsert the new action into the module_actions table
     INSERT INTO public.module_actions (id, module_id, "order", type, created_at, updated_at, deleted_at)
-    VALUES (id, module_id, "order", 'LIMIT', now(), NULL, NULL)
+    VALUES ("actionId", module_id, "order", 'LIMIT', now(), NULL, NULL)
     ON CONFLICT (id) DO UPDATE
     SET module_id = EXCLUDED.module_id,
       "order" = EXCLUDED."order",
@@ -1030,11 +1328,12 @@ END;
 $$;
 
 
-ALTER FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "id" "uuid", "type" "public"."LIMIT_TYPE") OWNER TO "postgres";
+ALTER FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "actionId" "uuid", "type" "public"."LIMIT_TYPE") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."UpsertModuleActionShuffle"("moduleId" "uuid", "newOrder" smallint, "actionId" "uuid" DEFAULT "gen_random_uuid"(), "shuffleType" "public"."SHUFFLE_TYPE" DEFAULT 'RANDOM'::"public"."SHUFFLE_TYPE") RETURNS "public"."ModuleAction:Shuffle"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     result public."ModuleAction:Shuffle";
@@ -1078,6 +1377,7 @@ ALTER FUNCTION "public"."UpsertModuleActionShuffle"("moduleId" "uuid", "newOrder
 
 CREATE OR REPLACE FUNCTION "public"."UpsertModuleSource:RecentlyListened"("p_module_id" "uuid", "p_quantity" smallint, "p_interval" "public"."RECENTLY_PLAYED_INTERVAL", "p_source_id" "uuid" DEFAULT "gen_random_uuid"()) RETURNS "public"."recently_listened_source_with_config"
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     upserted_source_row public.module_sources;
@@ -1187,8 +1487,53 @@ END;$$;
 ALTER FUNCTION "spotify_auth"."UpsertProviderData"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "spotify_auth"."upsert_provider_data"("p_user_id" "uuid", "p_access" "text" DEFAULT NULL::"text", "p_refresh" "text" DEFAULT NULL::"text", "p_expires_at" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS "spotify_auth"."provider_session_data"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+    upserted_row spotify_auth.provider_session_data;
+    missing_fields TEXT;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM spotify_auth.provider_session_data WHERE spotify_auth.provider_session_data.user_id = p_user_id
+    ) THEN
+        missing_fields := '';
+        IF p_ACCESS IS NULL THEN
+            missing_fields := missing_fields || 'access, ';
+        END IF;
+        IF p_REFRESH IS NULL THEN
+            missing_fields := missing_fields || 'refresh, ';
+        END IF;
+        IF p_expires_at IS NULL THEN
+            missing_fields := missing_fields || 'expires_at, ';
+        END IF;
+        
+        IF missing_fields <> '' THEN
+            RAISE EXCEPTION 'No record found to update. Missing required arguments to create a new record: %', substring(missing_fields, 1, length(missing_fields) - 2);
+        END IF;
+    END IF;
+
+    INSERT INTO spotify_auth.provider_session_data (user_id, access, refresh, expires_at)
+    VALUES (p_user_id, p_ACCESS, p_REFRESH, p_expires_at)
+    ON CONFLICT (user_id)
+    DO UPDATE SET
+        access = EXCLUDED.access,
+        refresh = EXCLUDED.refresh,
+        expires_at = EXCLUDED.expires_at
+    RETURNING * INTO upserted_row;
+
+    RETURN upserted_row;
+END;
+$$;
+
+
+ALTER FUNCTION "spotify_auth"."upsert_provider_data"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "spotify_cache"."DeleteOldRecentlyListened"("p_older_than" timestamp with time zone) RETURNS integer
     LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 DECLARE
     deleted_row_count INT;
@@ -1215,95 +1560,6 @@ CREATE TABLE IF NOT EXISTS "feature_flags"."global_flags" (
 
 
 ALTER TABLE "feature_flags"."global_flags" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."limit_action_configs" (
-    "id" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone,
-    "limit" smallint NOT NULL,
-    "type" "public"."LIMIT_TYPE" DEFAULT 'OVERALL'::"public"."LIMIT_TYPE" NOT NULL,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."limit_action_configs" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."module_outputs" (
-    "module_id" "uuid" NOT NULL,
-    "type" "public"."SPOTIFY_OUTPUT_TYPE" NOT NULL,
-    "spotify_id" "text" NOT NULL,
-    "limit" integer,
-    "mode" "public"."MODULE_OUTPUT_MODE" NOT NULL,
-    "de_dupe" boolean NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone,
-    "deleted_at" timestamp with time zone,
-    "image_url" "text",
-    "title" "text" NOT NULL,
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL
-);
-
-
-ALTER TABLE "public"."module_outputs" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."module_sources" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "module_id" "uuid" NOT NULL,
-    "type" "public"."SPOTIFY_SOURCE_TYPE" NOT NULL,
-    "spotify_id" "text",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone,
-    "deleted_at" timestamp with time zone,
-    "limit" integer,
-    "image_url" "text",
-    "title" "text" NOT NULL
-);
-
-
-ALTER TABLE "public"."module_sources" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."modules" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "name" "text" NOT NULL,
-    "updated_at" timestamp with time zone,
-    "is_running" boolean DEFAULT false NOT NULL,
-    "next_scheduled_run" timestamp with time zone,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."modules" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."recently_played_source_configs" (
-    "id" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone,
-    "quantity" smallint NOT NULL,
-    "interval" "public"."RECENTLY_PLAYED_INTERVAL" NOT NULL,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."recently_played_source_configs" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."shuffle_action_configs" (
-    "id" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone,
-    "shuffle_type" "public"."SHUFFLE_TYPE" NOT NULL,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."shuffle_action_configs" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "spotify_cache"."albums" (
@@ -1582,6 +1838,150 @@ CREATE POLICY "Enable read access for all users" ON "feature_flags"."global_flag
 ALTER TABLE "feature_flags"."global_flags" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."combine_action_sources" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."filter_action_sources" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."limit_action_configs" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."module_actions" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."module_outputs" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."module_sources" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."modules" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."recently_played_source_configs" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to delete all rows" ON "public"."shuffle_action_configs" FOR DELETE TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."combine_action_sources" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."filter_action_sources" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."limit_action_configs" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."module_actions" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."module_outputs" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."module_sources" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."modules" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."recently_played_source_configs" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to insert all rows" ON "public"."shuffle_action_configs" FOR INSERT TO "service_role" WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."combine_action_sources" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."filter_action_sources" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."limit_action_configs" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."module_actions" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."module_outputs" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."module_sources" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."modules" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."recently_played_source_configs" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to select all rows" ON "public"."shuffle_action_configs" FOR SELECT TO "service_role" USING (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."combine_action_sources" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."filter_action_sources" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."limit_action_configs" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."module_actions" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."module_outputs" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."module_sources" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."modules" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."recently_played_source_configs" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow service_role to update all rows" ON "public"."shuffle_action_configs" FOR UPDATE TO "service_role" USING (true) WITH CHECK (true);
+
+
+
 CREATE POLICY "Enable all for users based on user_id" ON "public"."modules" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
@@ -1589,6 +1989,14 @@ CREATE POLICY "Enable all for users based on user_id" ON "public"."modules" TO "
 CREATE POLICY "Only actions for modules owned by user" ON "public"."module_actions" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = ( SELECT "modules"."user_id"
    FROM "public"."modules"
   WHERE ("modules"."id" = "module_actions"."module_id"))));
+
+
+
+CREATE POLICY "Only allow combine sources owned by user" ON "public"."combine_action_sources" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "modules"."user_id"
+   FROM "public"."modules"
+  WHERE ("modules"."id" IN ( SELECT "module_actions"."module_id"
+           FROM "public"."module_actions"
+          WHERE ("module_actions"."id" = "combine_action_sources"."action_id"))))));
 
 
 
@@ -1806,9 +2214,45 @@ GRANT ALL ON TABLE "public"."filter_action_sources" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."limit_action_configs" TO "anon";
+GRANT ALL ON TABLE "public"."limit_action_configs" TO "authenticated";
+GRANT ALL ON TABLE "public"."limit_action_configs" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."module_actions" TO "anon";
 GRANT ALL ON TABLE "public"."module_actions" TO "authenticated";
 GRANT ALL ON TABLE "public"."module_actions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."module_outputs" TO "anon";
+GRANT ALL ON TABLE "public"."module_outputs" TO "authenticated";
+GRANT ALL ON TABLE "public"."module_outputs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."module_sources" TO "anon";
+GRANT ALL ON TABLE "public"."module_sources" TO "authenticated";
+GRANT ALL ON TABLE "public"."module_sources" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."modules" TO "anon";
+GRANT ALL ON TABLE "public"."modules" TO "authenticated";
+GRANT ALL ON TABLE "public"."modules" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "anon";
+GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "authenticated";
+GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "anon";
+GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "authenticated";
+GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "service_role";
 
 
 
@@ -2052,6 +2496,12 @@ GRANT ALL ON FUNCTION "public"."GetModuleActions"("moduleId" "uuid") TO "service
 
 
 
+GRANT ALL ON FUNCTION "public"."GetModuleRunData"("moduleId" "uuid", "callerUserId" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."GetModuleRunData"("moduleId" "uuid", "callerUserId" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."GetModuleRunData"("moduleId" "uuid", "callerUserId" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."GetShuffleAction"("actionId" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."GetShuffleAction"("actionId" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."GetShuffleAction"("actionId" "uuid") TO "service_role";
@@ -2100,9 +2550,9 @@ GRANT ALL ON FUNCTION "public"."ReorderActions"("action_ids" "uuid"[]) TO "servi
 
 
 
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "actionId" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "actionId" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionCombine"("module_id" "uuid", "order" smallint, "sources" "public"."CombineSourceUpsertRequest"[], "actionId" "uuid") TO "service_role";
 
 
 
@@ -2112,9 +2562,9 @@ GRANT ALL ON FUNCTION "public"."UpsertModuleActionFilter"("module_id" "uuid", "o
 
 
 
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "id" "uuid", "type" "public"."LIMIT_TYPE") TO "anon";
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "id" "uuid", "type" "public"."LIMIT_TYPE") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "id" "uuid", "type" "public"."LIMIT_TYPE") TO "service_role";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "actionId" "uuid", "type" "public"."LIMIT_TYPE") TO "anon";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "actionId" "uuid", "type" "public"."LIMIT_TYPE") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."UpsertModuleActionLimit"("module_id" "uuid", "order" smallint, "limit" smallint, "actionId" "uuid", "type" "public"."LIMIT_TYPE") TO "service_role";
 
 
 
@@ -2139,6 +2589,12 @@ GRANT ALL ON TABLE "spotify_auth"."provider_session_data" TO "service_role";
 GRANT ALL ON FUNCTION "spotify_auth"."UpsertProviderData"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "anon";
 GRANT ALL ON FUNCTION "spotify_auth"."UpsertProviderData"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "spotify_auth"."UpsertProviderData"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "spotify_auth"."upsert_provider_data"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "spotify_auth"."upsert_provider_data"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "spotify_auth"."upsert_provider_data"("p_user_id" "uuid", "p_access" "text", "p_refresh" "text", "p_expires_at" timestamp with time zone) TO "service_role";
 
 
 
@@ -2174,42 +2630,6 @@ GRANT ALL ON TABLE "feature_flags"."global_flags" TO "service_role";
 
 
 
-
-
-
-GRANT ALL ON TABLE "public"."limit_action_configs" TO "anon";
-GRANT ALL ON TABLE "public"."limit_action_configs" TO "authenticated";
-GRANT ALL ON TABLE "public"."limit_action_configs" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."module_outputs" TO "anon";
-GRANT ALL ON TABLE "public"."module_outputs" TO "authenticated";
-GRANT ALL ON TABLE "public"."module_outputs" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."module_sources" TO "anon";
-GRANT ALL ON TABLE "public"."module_sources" TO "authenticated";
-GRANT ALL ON TABLE "public"."module_sources" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."modules" TO "anon";
-GRANT ALL ON TABLE "public"."modules" TO "authenticated";
-GRANT ALL ON TABLE "public"."modules" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "anon";
-GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "authenticated";
-GRANT ALL ON TABLE "public"."recently_played_source_configs" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "anon";
-GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "authenticated";
-GRANT ALL ON TABLE "public"."shuffle_action_configs" TO "service_role";
 
 
 

@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../database.gen.ts";
-import { getPlaylistData } from "./get-playlist-data.ts";
-import { getAlbumData } from "./get-album-data.ts";
-import { getArtistData } from "./get-artist-data.ts";
-import { getUserTracks } from "./get-user-tracks.ts";
-import { getRecentlyListenedData } from "./get-recently-listened-data.ts";
+import { getPlaylistData } from "@shared/spotify-data-fetchers/get-playlist-data.ts";
+import { getAlbumData } from "@shared/spotify-data-fetchers/get-album-data.ts";
+import { getArtistData } from "@shared/spotify-data-fetchers/get-artist-data.ts";
+import { getUserTracks } from "@shared/spotify-data-fetchers/get-user-tracks.ts";
+import { getRecentlyListenedData } from "@shared/spotify-data-fetchers/get-recently-listened-data.ts";
 
 type BaseSource = Pick<
   Database["public"]["Tables"]["module_sources"]["Row"],
@@ -18,13 +18,18 @@ type GetAllTrackIdsArgs<T extends BaseSource> = {
     "spotify_cache" | "public" | "spotify_auth"
   >;
   userId: string;
+  checkIfSaved?: boolean;
 };
 
 export const getAllTrackIds = async <T extends BaseSource>({
   sources,
   supabaseClient,
   userId,
-}: GetAllTrackIdsArgs<T>): Promise<string[]> => {
+  checkIfSaved,
+}: GetAllTrackIdsArgs<T>): Promise<{
+  allTrackIds: string[];
+  likedSongsTrackIds: string[];
+}> => {
   const sourcesWithIds = sources.reduce<
     Record<Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"], string[]>
   >(
@@ -53,6 +58,8 @@ export const getAllTrackIds = async <T extends BaseSource>({
   );
 
   const allSourceTrackIds = new Set<string>();
+  const trackIdsFromLikedSongs = new Set<string>();
+  // TODO: look into only 50 coming back
   await Promise.allSettled(
     Object.entries(sourcesWithIds).map(async ([typeStr, sourceIds]) => {
       const type =
@@ -97,17 +104,21 @@ export const getAllTrackIds = async <T extends BaseSource>({
                 ).data.albums.flatMap((album) => album.track_ids),
               );
               break;
-            case "LIKED_SONGS":
-              newTrackIds.push(
-                ...(
-                  await getUserTracks({
-                    spotifyId: id,
-                    supabaseClient,
-                    userId,
-                  })
-                ).data.map((track) => track.track_id),
+            case "LIKED_SONGS": {
+              const userTrackIds = (
+                await getUserTracks({
+                  spotifyId: id,
+                  supabaseClient,
+                  userId,
+                  checkIfSaved,
+                })
+              ).data.map((track) => track.track_id);
+              newTrackIds.push(...userTrackIds);
+              newTrackIds.forEach((trackId) =>
+                trackIdsFromLikedSongs.add(trackId),
               );
               break;
+            }
             case "RECENTLY_PLAYED":
               newTrackIds.push(
                 ...(
@@ -126,5 +137,8 @@ export const getAllTrackIds = async <T extends BaseSource>({
     }),
   );
 
-  return Array.from(allSourceTrackIds);
+  return {
+    allTrackIds: Array.from(allSourceTrackIds),
+    likedSongsTrackIds: Array.from(trackIdsFromLikedSongs),
+  };
 };

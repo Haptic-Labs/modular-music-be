@@ -1,20 +1,18 @@
 import {
   setupSupabaseWithUser,
   setupSupabaseWithServiceRole,
-} from "@/shared/setup-supabase.ts";
-import { validateAuth } from "@/shared/validate-auth.ts";
-import { trueRandomShuffle } from "@/shared/shuffles/true-random-shuffle.ts";
-import { getAllTrackIds } from "@/shared/spotify-data-fetchers/get-all-track-ids.ts";
+} from "@shared/setup-supabase.ts";
+import { validateAuth } from "@shared/validate-auth.ts";
+import { trueRandomShuffle } from "@shared/shuffles/true-random-shuffle.ts";
+import { getAllTrackIds } from "@shared/spotify-data-fetchers/get-all-track-ids.ts";
 import { HTTPException } from "@hono/http-exception";
-import { BlankEnv, H, HandlerResponse } from "@hono/hono/types";
-import { Schema } from "@/shared/schema.ts";
-import {
-  addItemsToPlaylist,
-  removePlaylistItems,
-} from "npm:@soundify/web-api@1.1.5";
-import { setupSpotifyClientWithoutTokens } from "@/shared/setup-spotify-client.ts";
-import { chunkArray } from "@/shared/chunk-array.ts";
-import { getPlaylistData } from "@/shared/spotify-data-fetchers/get-playlist-data.ts";
+import { BlankEnv, H, HandlerResponse } from "@hono/types";
+import { Schema } from "@shared/schema.ts";
+import { addItemsToPlaylist, removePlaylistItems } from "@soundify/web-api";
+import { setupSpotifyClientWithoutTokens } from "@shared/setup-spotify-client.ts";
+import { chunkArray } from "@shared/chunk-array.ts";
+import { getPlaylistData } from "@shared/spotify-data-fetchers/get-playlist-data.ts";
+import { limitTracksWithCheck } from "@shared/limit-tracks-with-check.ts";
 
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
@@ -69,119 +67,193 @@ export const RunModule: H<
       });
     }
 
-    let workingTrackIds = await getAllTrackIds({
+    const { allTrackIds, likedSongsTrackIds } = await getAllTrackIds({
       userId: user.id,
       sources: moduleData.moduleSources ?? [],
       supabaseClient: serviceRoleSupabaseClient,
+      checkIfSaved: false,
     });
-
-    // Run through actions
-    moduleData.moduleActions?.forEach(async (action) => {
-      switch (action.type) {
-        case "LIMIT":
-          workingTrackIds = workingTrackIds.slice(
-            0,
-            moduleData.limitConfigs?.find((config) => config.id === action.id)
-              ?.limit ?? undefined,
-          );
-          break;
-        case "COMBINE":
-          workingTrackIds = workingTrackIds.concat(
-            await getAllTrackIds({
-              sources:
-                moduleData.combineSources
-                  ?.filter((source) => source.action_id === action.id)
-                  .map((source) => ({
-                    ...source,
-                    type: source.source_type,
-                  })) ?? [],
-              supabaseClient: serviceRoleSupabaseClient,
-              userId: user.id,
-            }),
-          );
-          break;
-        case "FILTER": {
-          const trackIdsToRemove = await getAllTrackIds({
-            sources:
-              moduleData.filterSources
-                ?.filter((source) => source.action_id === action.id)
-                .map((source) => ({
-                  ...source,
-                  type: source.source_type,
-                })) ?? [],
-            supabaseClient: serviceRoleSupabaseClient,
-            userId: user.id,
-          });
-          workingTrackIds = workingTrackIds.filter(
-            (trackId) => !trackIdsToRemove.includes(trackId),
-          );
-          break;
-        }
-        case "SHUFFLE":
-          workingTrackIds = trueRandomShuffle(workingTrackIds);
-          break;
-      }
-    });
+    const initialTrackIds = new Set(allTrackIds);
+    const initialLikedSongsTrackIdsSet = new Set(likedSongsTrackIds);
+    let hasCheckedAllTracks = false;
 
     const spotifyClient = await setupSpotifyClientWithoutTokens({
       supabaseClient: serviceRoleSupabaseClient,
       userId: user.id,
     });
 
-    const trackIdBatches = chunkArray(workingTrackIds, 100);
-
-    moduleData.moduleOutputs?.forEach(async (output) => {
-      switch (output.type) {
-        case "PLAYLIST": {
-          switch (output.mode) {
-            case "APPEND": {
-              trackIdBatches.forEach(async (batch) => {
-                await addItemsToPlaylist(
-                  spotifyClient,
-                  output.spotify_id,
-                  batch.map((id) => `spotify:track:${id}`),
-                );
+    // Run through actions
+    const actionsPromise =
+      moduleData.moduleActions?.reduce<
+        Promise<{
+          workingTrackIds: Set<string>;
+          likedSongsTrackIdsSet: Set<string>;
+        }>
+      >(
+        async (acc, action) => {
+          let { workingTrackIds, likedSongsTrackIdsSet } = await acc;
+          switch (action.type) {
+            case "LIMIT":
+              workingTrackIds = await limitTracksWithCheck({
+                supabaseServiceRoleClient: serviceRoleSupabaseClient,
+                spotifyClient,
+                trackIds: workingTrackIds,
+                likedTrackIds: likedSongsTrackIdsSet,
+                userId: user.id,
+                limit:
+                  moduleData.limitConfigs?.find(
+                    (config) => config.id === action.id,
+                  )?.limit ?? 0,
               });
-              return;
-            }
-            case "PREPEND": {
-              trackIdBatches.toReversed().forEach(async (batch) => {
-                await addItemsToPlaylist(
-                  spotifyClient,
-                  output.spotify_id,
-                  batch.map((id) => `spotify:track:${id}`),
-                  0,
-                );
-              });
-              return;
-            }
-            case "REPLACE": {
-              const { data: playlist } = await getPlaylistData({
-                spotifyId: output.spotify_id,
+              hasCheckedAllTracks = true;
+              break;
+            case "COMBINE": {
+              const { allTrackIds, likedSongsTrackIds } = await getAllTrackIds({
+                sources:
+                  moduleData.combineSources
+                    ?.filter((source) => source.action_id === action.id)
+                    .map((source) => ({
+                      ...source,
+                      type: source.source_type,
+                    })) ?? [],
                 supabaseClient: serviceRoleSupabaseClient,
                 userId: user.id,
-                spotifyClient,
+                checkIfSaved: false,
               });
-              const playlistTrackBatches = chunkArray(playlist.track_ids, 100);
-              playlistTrackBatches.forEach(async (batch) => {
-                await removePlaylistItems(
+              allTrackIds.forEach((trackId) => workingTrackIds.add(trackId));
+              likedSongsTrackIds.forEach((trackId) =>
+                likedSongsTrackIdsSet.add(trackId),
+              );
+              hasCheckedAllTracks = false;
+              break;
+            }
+
+            case "FILTER": {
+              const { allTrackIds: trackIdsToRemove } = await getAllTrackIds({
+                sources:
+                  moduleData.filterSources
+                    ?.filter((source) => source.action_id === action.id)
+                    .map((source) => ({
+                      ...source,
+                      type: source.source_type,
+                    })) ?? [],
+                supabaseClient: serviceRoleSupabaseClient,
+                userId: user.id,
+                checkIfSaved: false,
+              });
+              trackIdsToRemove.forEach((trackId) =>
+                workingTrackIds.delete(trackId),
+              );
+              break;
+            }
+            case "SHUFFLE":
+              workingTrackIds = new Set(
+                trueRandomShuffle(Array.from(workingTrackIds)),
+              );
+              break;
+          }
+          return { workingTrackIds, likedSongsTrackIdsSet };
+        },
+        Promise.resolve({
+          workingTrackIds: initialTrackIds,
+          likedSongsTrackIdsSet: initialLikedSongsTrackIdsSet,
+        }),
+      ) ??
+      Promise.resolve({
+        workingTrackIds: initialTrackIds,
+        likedSongsTrackIdsSet: initialLikedSongsTrackIdsSet,
+      });
+    let { workingTrackIds: trackIds, likedSongsTrackIdsSet } =
+      await actionsPromise;
+
+    if (!hasCheckedAllTracks) {
+      trackIds = await limitTracksWithCheck({
+        supabaseServiceRoleClient: serviceRoleSupabaseClient,
+        spotifyClient,
+        trackIds,
+        likedTrackIds: likedSongsTrackIdsSet,
+        userId: user.id,
+        limit: initialTrackIds.size,
+      });
+    }
+
+    const trackIdBatches = chunkArray(Array.from(trackIds), 50);
+
+    await Promise.allSettled(
+      moduleData.moduleOutputs?.map(async (output) => {
+        switch (output.type) {
+          case "PLAYLIST": {
+            switch (output.mode) {
+              case "APPEND": {
+                const promise = trackIdBatches.reduce(async (acc, batch) => {
+                  await acc;
+                  await addItemsToPlaylist(
+                    spotifyClient,
+                    output.spotify_id,
+                    batch.map((id) => `spotify:track:${id}`),
+                  );
+                }, Promise.resolve());
+                await promise;
+                return;
+              }
+              case "PREPEND": {
+                const promise = trackIdBatches
+                  .toReversed()
+                  .reduce(async (acc, batch) => {
+                    await acc;
+                    await addItemsToPlaylist(
+                      spotifyClient,
+                      output.spotify_id,
+                      batch.map((id) => `spotify:track:${id}`),
+                      0,
+                    );
+                  }, Promise.resolve());
+                await promise;
+                return;
+              }
+              case "REPLACE": {
+                const { data: playlist } = await getPlaylistData({
+                  spotifyId: output.spotify_id,
+                  supabaseClient: serviceRoleSupabaseClient,
+                  userId: user.id,
                   spotifyClient,
-                  output.spotify_id,
-                  batch.map((id) => `spotify:track:${id}`),
+                });
+                const playlistTrackBatches = chunkArray(
+                  playlist.track_ids,
+                  100,
                 );
-              });
-              trackIdBatches.forEach(async (batch) => {
-                await addItemsToPlaylist(
-                  spotifyClient,
-                  output.spotify_id,
-                  batch.map((id) => `spotify:track:${id}`),
+                const removePromise = playlistTrackBatches.reduce(
+                  async (acc, batch) => {
+                    await acc;
+                    await removePlaylistItems(
+                      spotifyClient,
+                      output.spotify_id,
+                      batch.map((id) => `spotify:track:${id}`),
+                    );
+                  },
+                  Promise.resolve(),
                 );
-              });
+                await removePromise;
+                const addPromise = trackIdBatches.reduce(async (acc, batch) => {
+                  await acc;
+                  await addItemsToPlaylist(
+                    spotifyClient,
+                    output.spotify_id,
+                    batch.map((id) => `spotify:track:${id}`),
+                  );
+                }, Promise.resolve());
+                try {
+                  await addPromise;
+                  return;
+                } catch (error) {
+                  console.error(JSON.stringify(error, null, 2));
+                }
+              }
             }
           }
         }
-      }
-    });
+      }) ?? [],
+    );
 
     return ctx.json({}, 201);
   } finally {

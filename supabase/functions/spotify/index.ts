@@ -1,7 +1,7 @@
 import "@supabase/edge-runtime";
 import { Hono } from "@hono/hono";
-import { HONO_CORS } from "@/shared/cors.ts";
-import { Routes } from "@/shared/schema.ts";
+import { HONO_CORS } from "@shared/cors.ts";
+import { Routes } from "@shared/schema.ts";
 import { GetPlaylist } from "./playlists/get-playlist.ts";
 import { RefreshToken } from "./auth/refresh-token.ts";
 import { GetUserTracks } from "./tracks/get-user-tracks.ts";

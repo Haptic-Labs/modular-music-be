@@ -1,10 +1,10 @@
 import { HTTPException } from "@hono/http-exception";
-import { getSpotifyToken } from "@/shared/get-spotify-token.ts";
-import { validateAuth } from "@/shared/validate-auth.ts";
-import { HonoFn } from "@/shared/types.ts";
-import { setupSupabaseWithUser } from "@/shared/setup-supabase.ts";
-import { setupSpotifyClient } from "@/shared/setup-spotify-client.ts";
-import { getAlbumData } from "@/shared/spotify-data-fetchers/get-album-data.ts";
+import { getSpotifyToken } from "@shared/get-spotify-token.ts";
+import { validateAuth } from "@shared/validate-auth.ts";
+import { HonoFn } from "@shared/types.ts";
+import { setupSupabaseWithUser } from "@shared/setup-supabase.ts";
+import { setupSpotifyClient } from "@shared/setup-spotify-client.ts";
+import { getAlbumData } from "@shared/spotify-data-fetchers/get-album-data.ts";
 
 /**
  * HTTP handler for getting album tracks

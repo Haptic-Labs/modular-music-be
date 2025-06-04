@@ -1,7 +1,6 @@
 import { HTTPException } from "@hono/http-exception";
 import type { SpotifyDataFetcherArgs } from "../types.ts";
 import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
-import { PageIterator } from "@soundify/pagination";
 import { getArtistAlbums } from "@soundify/web-api";
 import { getAlbumData } from "./get-album-data.ts";
 
@@ -38,14 +37,20 @@ export const getArtistData = async ({
     throw new HTTPException(500, { message: "Error creating spotify client" });
   }
 
-  const albumIterator = new PageIterator((offset) =>
-    getArtistAlbums(spotifyClient, spotifyId, {
-      limit: 50,
-      offset,
-      include_groups: ["album", "ep", "single"],
-    }),
-  );
-  const albumIds = (await albumIterator.collect()).map((album) => album.id);
+  const albumIds: string[] = [];
+  let hasAllAlbums = false;
+  const pageLimit = 50;
+  while (!hasAllAlbums) {
+    const nextPage = await getArtistAlbums(spotifyClient, spotifyId, {
+      limit: pageLimit,
+      offset: albumIds.length,
+    });
+    albumIds.push(...nextPage.items.map((item) => item.id));
+    if (nextPage.items.length < pageLimit) {
+      hasAllAlbums = true;
+    }
+  }
+
   const albums: ArtistQueryResult["data"]["albums"] = [];
   await Promise.allSettled(
     albumIds.map(async (albumId) => {
