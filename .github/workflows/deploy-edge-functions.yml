@@ -1,0 +1,91 @@
+name: Deploy Edge Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      affected-functions: ${{ steps.changes.outputs.affected-functions }}
+      has-changes: ${{ steps.changes.outputs.has-changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect affected functions
+        id: changes
+        run: |
+          # Get the list of changed files
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # For manual dispatch, deploy all functions
+            changed_files=$(find supabase/functions -name "*.ts" -o -name "*.js" -o -name "*.json" | head -100)
+          else
+            # For push events, get files changed since the previous commit
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          fi
+
+          echo "Changed files:"
+          echo "$changed_files"
+
+          # Find all function directories (excluding _shared)
+          function_dirs=$(find supabase/functions -type d -mindepth 1 -maxdepth 1 ! -name "_shared" | sed 's|supabase/functions/||')
+
+          affected_functions=""
+
+          # Check if _shared directory was modified first (affects all functions)
+          if echo "$changed_files" | grep -q "supabase/functions/_shared/"; then
+            echo "_shared directory was modified, deploying all functions"
+            affected_functions="$function_dirs"
+          else
+            echo "_shared directory not modified, checking individual functions"
+            # Only check individual function directories if _shared wasn't modified
+            for func_dir in $function_dirs; do
+              if echo "$changed_files" | grep -q "supabase/functions/$func_dir/"; then
+                echo "Function $func_dir was modified"
+                if [ -z "$affected_functions" ]; then
+                  affected_functions="$func_dir"
+                else
+                  affected_functions="$affected_functions $func_dir"
+                fi
+              fi
+            done
+          fi
+
+          # Convert to JSON array format for matrix strategy
+          if [ -n "$affected_functions" ]; then
+            json_array=$(echo "$affected_functions" | tr ' ' '\n' | jq -R . | jq -s .)
+            echo "affected-functions=$json_array" >> $GITHUB_OUTPUT
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "Affected functions: $affected_functions"
+          else
+            echo "affected-functions=[]" >> $GITHUB_OUTPUT
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "No edge functions were affected by the changes"
+          fi
+
+  deploy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function: ${{ fromJson(needs.detect-changes.outputs.affected-functions) }}
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_ID: your-project-id
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy function ${{ matrix.function }}
+        run: supabase functions deploy ${{ matrix.function }} --project-ref $PROJECT_ID
