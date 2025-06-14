@@ -58,8 +58,19 @@ jobs:
 
           # Convert to JSON array format for matrix strategy
           if [ -n "$affected_functions" ]; then
-            # Create JSON array more safely by filtering out empty lines and ensuring proper formatting
-            json_array=$(echo "$affected_functions" | tr ' ' '\n' | grep -v '^$' | jq -R . | jq -s .)
+            # Create JSON array more safely by properly handling spaces and newlines
+            json_array="["
+            first=true
+            for func in $affected_functions; do
+              if [ "$first" = true ]; then
+                json_array="$json_array\"$func\""
+                first=false
+              else
+                json_array="$json_array,\"$func\""
+              fi
+            done
+            json_array="$json_array]"
+            
             echo "affected-functions=$json_array" >> $GITHUB_OUTPUT
             echo "has-changes=true" >> $GITHUB_OUTPUT
             echo "Affected functions: $affected_functions"
