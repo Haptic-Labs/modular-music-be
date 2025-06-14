@@ -44,6 +44,7 @@ export const getArtistData = async ({
     const nextPage = await getArtistAlbums(spotifyClient, spotifyId, {
       limit: pageLimit,
       offset: albumIds.length,
+      include_groups: ["album", "single"],
     });
     albumIds.push(...nextPage.items.map((item) => item.id));
     if (nextPage.items.length < pageLimit) {
