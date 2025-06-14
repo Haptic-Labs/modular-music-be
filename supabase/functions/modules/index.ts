@@ -1,8 +1,17 @@
 import "@supabase/edge-runtime";
+import * as Sentry from "@sentry";
 import { Hono } from "@hono/hono";
 import { HONO_CORS } from "@shared/cors.ts";
 import { Routes } from "@shared/schema.ts";
 import { RunModule } from "@modules/:moduleId/run.ts";
+
+Sentry.init({
+  dsn: Deno.env.get("SENTRY_DSN"),
+  defaultIntegrations: false,
+  tracesSampleRate: 1.0,
+});
+Sentry.setTag("region", Deno.env.get("SB_REGION"));
+Sentry.setTag("execution_id", Deno.env.get("SB_EXECUTION_ID"));
 
 const server = new Hono();
 
@@ -10,7 +19,14 @@ server.use("*", HONO_CORS);
 
 server.post(Routes.RunModule, RunModule);
 
-Deno.serve(server.fetch);
+Deno.serve((...args) => {
+  try {
+    return server.fetch(...args);
+  } catch (error) {
+    Sentry.captureException(error);
+    throw error;
+  }
+});
 
 /* To invoke locally:
 

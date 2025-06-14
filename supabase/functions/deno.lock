@@ -6,6 +6,7 @@
       "jsr:@supabase/functions-js": "jsr:@supabase/functions-js@2.4.4",
       "npm:@soundify/web-api@1.1.5": "npm:@soundify/web-api@1.1.5",
       "npm:@supabase/supabase-js@2": "npm:@supabase/supabase-js@2.49.10",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:openai@^4.52.5": "npm:openai@4.104.0"
     },
     "jsr": {
@@ -310,7 +311,12 @@
       }
     }
   },
-  "remote": {},
+  "redirects": {
+    "https://deno.land/x/sentry/index.mjs": "https://deno.land/x/sentry@8.55.0/index.mjs"
+  },
+  "remote": {
+    "https://deno.land/x/sentry@8.55.0/index.mjs": "573a1f82e1528ad6d211cb4945c2df63168d038b500f80922efce0e8cff801cb"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@4.4.8",
