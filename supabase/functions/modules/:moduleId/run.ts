@@ -67,14 +67,15 @@ export const RunModule: H<
       });
     }
 
-    const { allTrackIds, likedSongsTrackIds } = await getAllTrackIds({
+    const {
+      allTrackIds: initialTrackIds,
+      likedSongsTrackIds: initialLikedSongsTrackIdsSet,
+    } = await getAllTrackIds({
       userId: user.id,
       sources: moduleData.moduleSources ?? [],
       supabaseClient: serviceRoleSupabaseClient,
       checkIfSaved: false,
     });
-    const initialTrackIds = new Set(allTrackIds);
-    const initialLikedSongsTrackIdsSet = new Set(likedSongsTrackIds);
     let hasCheckedAllTracks = false;
 
     const spotifyClient = await setupSpotifyClientWithoutTokens({

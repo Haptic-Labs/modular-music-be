@@ -27,8 +27,8 @@ export const getAllTrackIds = async <T extends BaseSource>({
   userId,
   checkIfSaved,
 }: GetAllTrackIdsArgs<T>): Promise<{
-  allTrackIds: string[];
-  likedSongsTrackIds: string[];
+  allTrackIds: Set<string>;
+  likedSongsTrackIds: Set<string>;
 }> => {
   const sourcesWithIds = sources.reduce<
     Record<Database["public"]["Enums"]["SPOTIFY_SOURCE_TYPE"], string[]>
@@ -138,7 +138,7 @@ export const getAllTrackIds = async <T extends BaseSource>({
   );
 
   return {
-    allTrackIds: Array.from(allSourceTrackIds),
-    likedSongsTrackIds: Array.from(trackIdsFromLikedSongs),
+    allTrackIds: allSourceTrackIds,
+    likedSongsTrackIds: trackIdsFromLikedSongs,
   };
 };
