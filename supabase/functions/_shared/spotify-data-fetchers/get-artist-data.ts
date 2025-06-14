@@ -51,7 +51,6 @@ export const getArtistData = async ({
       hasAllAlbums = true;
     }
   }
-  // This is a test
 
   const albums: ArtistQueryResult["data"]["albums"] = [];
   await Promise.allSettled(
