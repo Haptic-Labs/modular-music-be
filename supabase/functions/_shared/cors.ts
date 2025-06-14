@@ -1,6 +1,6 @@
-import { cors } from '@hono/cors';
+import { cors } from "@hono/cors";
 
 export const HONO_CORS = cors({
-  origin: '*',
-  allowHeaders: ['authorization', 'x-client-info', 'apikey', 'content-type'],
+  origin: "*",
+  allowHeaders: ["authorization", "x-client-info", "apikey", "content-type"],
 });

@@ -1,8 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database, Json } from './database.gen.ts';
-import { SPOTIFY_GET_TRACKS_LIMIT, SchemaName } from './constants.ts';
-import { SpotifyClient, getSavedTracks } from '@soundify/web-api';
-import { HTTPException } from '@hono/http-exception';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "./database.gen.ts";
+import {
+  SPOTIFY_GET_TRACKS_LIMIT,
+  type SchemaName,
+} from "@shared/constants.ts";
+import { type SpotifyClient, getSavedTracks } from "@soundify/web-api";
+import { HTTPException } from "@hono/http-exception";
 
 type SaveAllUserTracksArgs = {
   userId: string;
@@ -16,21 +19,21 @@ export const saveAllUserTracks = async ({
   spotifyClient,
 }: SaveAllUserTracksArgs) => {
   const { data: completionStatus } = await supabaseClient
-    .schema('spotify_cache')
-    .from('user_tracks_completion')
-    .select('*')
-    .eq('user_id', userId)
+    .schema("spotify_cache")
+    .from("user_tracks_completion")
+    .select("*")
+    .eq("user_id", userId)
     .maybeSingle();
   const { data: newestSavedTrack } = await supabaseClient
-    .schema('spotify_cache')
-    .from('user_tracks')
-    .select('*')
-    .eq('user_id', userId)
-    .order('added_at', { ascending: false })
+    .schema("spotify_cache")
+    .from("user_tracks")
+    .select("*")
+    .eq("user_id", userId)
+    .order("added_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  console.log('Fetching new user tracks:', {
+  console.log("Fetching new user tracks:", {
     userId,
     newestSavedTrack,
     completionStatus,
@@ -44,7 +47,7 @@ export const saveAllUserTracks = async ({
       limit: SPOTIFY_GET_TRACKS_LIMIT,
     });
 
-    console.log('Fetched page of user tracks from Spotify:', {
+    console.log("Fetched page of user tracks from Spotify:", {
       userId,
       offset: newTracksCount,
       count: page.items.length,
@@ -54,7 +57,7 @@ export const saveAllUserTracks = async ({
       ? page.items.some(
           ({ added_at }) =>
             new Date(added_at).getTime() <=
-            new Date(newestSavedTrack.added_at).getTime()
+            new Date(newestSavedTrack.added_at).getTime(),
         )
       : page.next === null || page.items.length < SPOTIFY_GET_TRACKS_LIMIT;
     const tracksToSave =
@@ -62,34 +65,34 @@ export const saveAllUserTracks = async ({
         ? page.items.filter(
             ({ added_at }) =>
               new Date(added_at).getTime() >
-              new Date(newestSavedTrack.added_at).getTime()
+              new Date(newestSavedTrack.added_at).getTime(),
           )
         : page.items;
 
     const { error } = tracksToSave.length
       ? await supabaseClient
-          .schema('spotify_cache')
-          .from('user_tracks')
+          .schema("spotify_cache")
+          .from("user_tracks")
           .insert(
             tracksToSave.map(({ track, added_at }) => ({
               user_id: userId,
               added_at,
               track_id: track.id,
               metadata: track as unknown as Json,
-            }))
+            })),
           )
       : { error: null };
 
     if (error) {
       const message =
-        'Error saving newer user tracks: ' + JSON.stringify(error);
+        "Error saving newer user tracks: " + JSON.stringify(error);
       console.error(message);
       throw new HTTPException(500, {
         message,
       });
     }
     if (tracksToSave.length)
-      console.log('Saved new user tracks:', {
+      console.log("Saved new user tracks:", {
         userId,
         offset: newTracksCount,
         count: tracksToSave.length,
@@ -98,14 +101,14 @@ export const saveAllUserTracks = async ({
     if (hasAllNewTracks && !newestSavedTrack) {
       const timestamp = new Date().toISOString();
       await supabaseClient
-        .schema('spotify_cache')
-        .from('user_tracks_completion')
+        .schema("spotify_cache")
+        .from("user_tracks_completion")
         .upsert({
           user_id: userId,
           updated_at: timestamp,
           comleted_at: timestamp,
         });
-      console.log('Updated user tracks completion status:', {
+      console.log("Updated user tracks completion status:", {
         userId,
         updated_at: timestamp,
         completed_at: timestamp,
@@ -117,18 +120,18 @@ export const saveAllUserTracks = async ({
 
   let hasAllOldTracks = completionStatus && !!completionStatus.completed_at;
   const { count, error } = await supabaseClient
-    .schema('spotify_cache')
-    .from('user_tracks')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId);
+    .schema("spotify_cache")
+    .from("user_tracks")
+    .select("*", { count: "exact" })
+    .eq("user_id", userId);
   if (count === null || error) {
-    const message = 'Error counting user tracks: ' + JSON.stringify(error);
+    const message = "Error counting user tracks: " + JSON.stringify(error);
     console.error(message);
     throw new HTTPException(500, {
       message,
     });
   }
-  console.log('Fetching older user tracks:', {
+  console.log("Fetching older user tracks:", {
     userId,
     countOfSavedTracks: count,
   });
@@ -138,7 +141,7 @@ export const saveAllUserTracks = async ({
       offset: olderTrackOffset,
       limit: SPOTIFY_GET_TRACKS_LIMIT,
     });
-    console.log('Fetched page of older user tracks from Spotify:', {
+    console.log("Fetched page of older user tracks from Spotify:", {
       userId,
       offset: olderTrackOffset,
       count: olderTracksPage.items.length,
@@ -149,19 +152,19 @@ export const saveAllUserTracks = async ({
       olderTracksPage.items.length < SPOTIFY_GET_TRACKS_LIMIT;
 
     const { error } = await supabaseClient
-      .schema('spotify_cache')
-      .from('user_tracks')
+      .schema("spotify_cache")
+      .from("user_tracks")
       .insert(
         olderTracksPage.items.map(({ track, added_at }) => ({
           user_id: userId,
           added_at,
           track_id: track.id,
           metadata: track as unknown as Json,
-        }))
+        })),
       );
     if (error) {
       const message =
-        'Error saving older user tracks: ' + JSON.stringify(error);
+        "Error saving older user tracks: " + JSON.stringify(error);
       console.error(message);
       throw new HTTPException(500, {
         message,
@@ -170,14 +173,14 @@ export const saveAllUserTracks = async ({
     const timestamp = new Date().toISOString();
     if (isLastPage) {
       await supabaseClient
-        .schema('spotify_cache')
-        .from('user_tracks_completion')
+        .schema("spotify_cache")
+        .from("user_tracks_completion")
         .upsert({
           user_id: userId,
           updated_at: timestamp,
           completed_at: timestamp,
         });
-      console.log('Updated user tracks completion status:', {
+      console.log("Updated user tracks completion status:", {
         userId,
         updated_at: timestamp,
         completed_at: timestamp,

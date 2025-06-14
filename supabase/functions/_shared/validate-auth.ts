@@ -1,8 +1,8 @@
-import { Context } from '@hono/hono';
-import { HTTPException } from '@hono/http-exception';
+import type { Context } from "@hono/hono";
+import { HTTPException } from "@hono/http-exception";
 
 export const validateAuth = (ctx: Context) => {
-  const authHeader = ctx.req.header('Authorization');
+  const authHeader = ctx.req.header("Authorization");
   if (!authHeader) {
     const message = "Missing 'Authorization' header";
     console.error(message);

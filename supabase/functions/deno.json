@@ -1,13 +1,20 @@
 {
+  "workspace": ["./_shared", "./modules", "./spotify"],
   "imports": {
+    "@modules/": "./modules/",
+    "@other/": "./other/",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
-    "@supabase/edge-runtime": "https://esm.sh/v135/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts",
+    "@supabase/edge-runtime": "jsr:@supabase/functions-js/edge-runtime.d.ts",
     "@hono/hono": "jsr:@hono/hono@4.4.8",
     "@hono/cors": "jsr:@hono/hono@4.4.8/cors",
     "@hono/http-exception": "jsr:@hono/hono@4.4.8/http-exception",
     "@hono/types": "jsr:@hono/hono@4.4.8/types",
     "@hono/validator": "jsr:@hono/hono@4.4.8/validator",
     "@soundify/web-api": "npm:@soundify/web-api@1.1.5",
-    "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination"
-  }
+    "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination",
+    "@shared/": "./_shared/"
+  },
+  "deno": "1.45.2",
+  "lock": true,
+  "version": "0.0.0"
 }

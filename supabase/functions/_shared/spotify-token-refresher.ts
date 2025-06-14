@@ -1,7 +1,7 @@
-import { HTTPException } from '@hono/http-exception';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './database.gen.ts';
-import { SchemaName } from './constants.ts';
+import { HTTPException } from "@hono/http-exception";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
 
 export const spotifyTokenRefresher = async ({
   refreshToken,
@@ -12,41 +12,41 @@ export const spotifyTokenRefresher = async ({
   supabaseClient: SupabaseClient<Database, SchemaName>;
   userId: string;
 }): Promise<
-  Database['spotify_auth']['Tables']['provider_session_data']['Row']
+  Database["spotify_auth"]["Tables"]["provider_session_data"]["Row"]
 > => {
-  const spotifyClientId = Deno.env.get('SPOTIFY_CLIENT_ID');
-  const spotifyClientSecret = Deno.env.get('SPOTIFY_CLIENT_SECRET');
+  const spotifyClientId = Deno.env.get("SPOTIFY_CLIENT_ID");
+  const spotifyClientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET");
 
   if (!spotifyClientId) {
-    const message = 'No spotify client id found in environment.';
+    const message = "No spotify client id found in environment.";
     console.error(message);
     throw new HTTPException(500, {
       message,
     });
   }
   if (!spotifyClientSecret) {
-    const message = 'No spotify client secret found in environment.';
+    const message = "No spotify client secret found in environment.";
     console.error(message);
     throw new HTTPException(500, {
       message,
     });
   }
 
-  const body = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
+  const body = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
       Authorization:
-        'Basic ' + btoa(spotifyClientId + ':' + spotifyClientSecret),
+        "Basic " + btoa(spotifyClientId + ":" + spotifyClientSecret),
     },
     body: new URLSearchParams({
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),
   }).catch((err) => {
     console.error(err);
     throw new HTTPException(500, {
-      message: 'Error refreshing Spotify token',
+      message: "Error refreshing Spotify token",
     });
   });
 
@@ -58,20 +58,20 @@ export const spotifyTokenRefresher = async ({
 
   if (!access) {
     console.warn(
-      'No access token received from Spotify.\nSpotify refresh response:',
-      { response }
+      "No access token received from Spotify.\nSpotify refresh response:",
+      { response },
     );
     throw new HTTPException(500, {
-      message: 'No access token received from Spotify',
+      message: "No access token received from Spotify",
     });
   }
 
   const newExpiration = new Date(
-    new Date().getTime() + expiresIn
+    new Date().getTime() + expiresIn,
   ).toISOString();
   const { data } = await supabaseClient
-    .schema('spotify_auth')
-    .rpc('UpsertProviderData', {
+    .schema("spotify_auth")
+    .rpc("UpsertProviderData", {
       p_user_id: userId,
       p_refresh: refresh,
       p_access: access,

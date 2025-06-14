@@ -1,8 +1,7 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './database.gen.ts';
-import { SchemaName } from './constants.ts';
-import { SpotifyClient, getSavedTracks } from '@soundify/web-api';
-import { PageIterator } from '@soundify/pagination';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
+import { type SpotifyClient, getSavedTracks } from "@soundify/web-api";
 
 type GetUserLatestTracksArgs = {
   userId: string;
@@ -24,54 +23,58 @@ export const getUserLatestTracks = async ({
     latestTrack?.added_at ||
     (
       await supabaseClient
-        .schema('spotify_cache')
-        .from('user_tracks')
-        .select('added_at')
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false })
+        .schema("spotify_cache")
+        .from("user_tracks")
+        .select("added_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle()
     ).data?.added_at;
 
-  const newTrackRows: Database['spotify_cache']['Tables']['user_tracks']['Insert'][] =
+  const newTrackRows: Database["spotify_cache"]["Tables"]["user_tracks"]["Insert"][] =
     [];
-  const savedTrackRows: Database['spotify_cache']['Tables']['user_tracks']['Row'][] =
+  const savedTrackRows: Database["spotify_cache"]["Tables"]["user_tracks"]["Row"][] =
     [];
 
   if (!latestAddedAt) {
-    const iterator = new PageIterator(async (offset) => {
-      const page = await getSavedTracks(spotifyClient, { offset, limit: 50 });
+    const newTracks: Awaited<ReturnType<typeof getSavedTracks>>["items"] = [];
+    let hasAllTracks = false;
+    const pageLimit = 50;
+    while (!hasAllTracks) {
+      const nextPage = await getSavedTracks(spotifyClient, {
+        offset: newTracks.length,
+        limit: pageLimit,
+      });
 
-      if (page.items.length) {
-        const newItemsRes = await supabaseClient
-          .schema('spotify_cache')
-          .from('user_tracks')
-          .insert(
-            page.items.map(({ track, added_at }) => ({
-              user_id: userId,
-              added_at,
-              track_id: track.id,
-              metadata: JSON.stringify(track),
-            }))
-          )
-          .select('*');
-
-        savedTrackRows.push(...(newItemsRes.data ?? []));
+      newTracks.push(...nextPage.items);
+      if (nextPage.items.length < pageLimit) {
+        hasAllTracks = true;
       }
-
-      return page;
-    });
+    }
+    const newItemsRes = await supabaseClient
+      .schema("spotify_cache")
+      .from("user_tracks")
+      .insert(
+        newTracks.map(({ track, added_at }) => ({
+          user_id: userId,
+          added_at,
+          track_id: track.id,
+          metadata: JSON.stringify(track),
+        })),
+      )
+      .select("*");
+    savedTrackRows.push(...(newItemsRes.data ?? []));
 
     // TODO: handle fetching older saved tracks if this fails in the middle
     // ideas: store the last fetched offset or "has oldest track" in a table
-    const newTracks = await iterator.collect();
     const rowsToAdd = newTracks.map<(typeof newTrackRows)[number]>(
       ({ track, added_at }) => ({
         user_id: userId,
         added_at,
         track_id: track.id,
         metadata: JSON.stringify(track),
-      })
+      }),
     );
     newTrackRows.push(...rowsToAdd);
   } else {
@@ -81,7 +84,7 @@ export const getUserLatestTracks = async ({
     });
 
     let needsNextPage = !fetchedTracks.some(
-      ({ added_at }) => latestAddedAt <= added_at
+      ({ added_at }) => latestAddedAt <= added_at,
     );
 
     while (needsNextPage) {
@@ -90,7 +93,7 @@ export const getUserLatestTracks = async ({
         limit: 50,
       });
       const unsavedTracks = nextPage.items.filter(
-        ({ added_at }) => latestAddedAt <= added_at
+        ({ added_at }) => latestAddedAt <= added_at,
       );
       if (unsavedTracks.length !== nextPage.items.length) needsNextPage = false;
       fetchedTracks.push(...unsavedTracks);
@@ -102,7 +105,7 @@ export const getUserLatestTracks = async ({
         added_at,
         track_id: track.id,
         metadata: JSON.stringify(track),
-      })
+      }),
     );
     newTrackRows.push(...rowsToAdd);
   }

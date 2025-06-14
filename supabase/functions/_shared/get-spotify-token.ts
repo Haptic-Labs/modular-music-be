@@ -1,8 +1,8 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './database.gen.ts';
-import { SchemaName } from './constants.ts';
-import { HTTPException } from '@hono/http-exception';
-import { spotifyTokenRefresher } from './spotify-token-refresher.ts';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
+import { HTTPException } from "@hono/http-exception";
+import { spotifyTokenRefresher } from "./spotify-token-refresher.ts";
 
 type GetSpotifyTokenArgs = {
   supabaseClient: SupabaseClient<Database, SchemaName, Database[SchemaName]>;
@@ -14,15 +14,15 @@ export const getSpotifyToken = async ({
   userId,
 }: GetSpotifyTokenArgs) => {
   const currentSavedToken = await supabaseClient
-    .schema('spotify_auth')
-    .from('provider_session_data')
-    .select('*')
-    .eq('user_id', userId)
+    .schema("spotify_auth")
+    .from("provider_session_data")
+    .select("*")
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!currentSavedToken.data) {
     throw new HTTPException(400, {
-      message: 'No Spotify token found for user.',
+      message: "No Spotify token found for user.",
     });
   }
 

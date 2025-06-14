@@ -1,7 +1,11 @@
 import { HTTPException } from "@hono/http-exception";
-import { Database } from "./database.gen.ts";
-import { SchemaName } from "./constants.ts";
-import { User, createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.gen.ts";
+import type { SchemaName } from "./constants.ts";
+import {
+  type SupabaseClient,
+  type User,
+  createClient,
+} from "@supabase/supabase-js";
 
 export const setupSupabase = ({ authHeader }: { authHeader?: string }) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -45,4 +49,24 @@ export const setupSupabaseWithUser = async ({
   }
 
   return { supabaseClient, user };
+};
+
+export const setupSupabaseWithServiceRole = (): {
+  serviceRoleSupabaseClient: SupabaseClient<Database>;
+} => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    const message = "Missing Supabase environment variables";
+    console.error(message);
+    throw new HTTPException(500, { message });
+  }
+
+  const serviceRoleSupabaseClient = createClient<Database>(
+    supabaseUrl,
+    serviceRoleKey,
+  );
+
+  return { serviceRoleSupabaseClient };
 };

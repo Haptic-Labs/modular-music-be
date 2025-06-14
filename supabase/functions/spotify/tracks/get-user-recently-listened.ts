@@ -1,21 +1,21 @@
-import { getUserLatestRecentlyListened } from './../../_shared/get-user-latest-recently-listened.ts';
-import { setupSpotifyClient } from './../../_shared/setup-spotify-client.ts';
-import { setupSupabase } from './../../_shared/setup-supabase.ts';
-import { validateAuth } from '../../_shared/validate-auth.ts';
-import { HonoFn } from '../types.ts';
-import { getSpotifyToken } from '../../_shared/get-spotify-token.ts';
-import { Schema } from '../../_shared/schema.ts';
-import { HTTPException } from '@hono/http-exception';
+import { getUserLatestRecentlyListened } from "@shared/get-user-latest-recently-listened.ts";
+import { setupSpotifyClient } from "@shared/setup-spotify-client.ts";
+import { setupSupabase } from "@shared/setup-supabase.ts";
+import { validateAuth } from "@shared/validate-auth.ts";
+import { HonoFn } from "@shared/types.ts";
+import { getSpotifyToken } from "@shared/get-spotify-token.ts";
+import { Schema } from "@shared/schema.ts";
+import { HTTPException } from "@hono/http-exception";
 
 export const GetUserRecentlyListened: HonoFn<
-  'GetUserRecentlyListened'
+  "GetUserRecentlyListened"
 > = async (ctx) => {
   const { authHeader } = validateAuth(ctx);
   const { supabaseClient } = setupSupabase({ authHeader });
 
-  const userId = ctx.req.param('userId');
+  const userId = ctx.req.param("userId");
   const query = ctx.req.query();
-  const { limit, after }: Schema['GetUserRecentlyListened']['request'] = {
+  const { limit, after }: Schema["GetUserRecentlyListened"]["request"] = {
     limit: query.limit ? Number(query.limit) : undefined,
     after: query.after ? String(query.after) : undefined,
   };
@@ -43,10 +43,10 @@ export const GetUserRecentlyListened: HonoFn<
 
   if (newRows.length) {
     await supabaseClient
-      .schema('spotify_cache')
-      .from('recently_listened')
+      .schema("spotify_cache")
+      .from("recently_listened")
       .insert(newRows)
-      .select('*');
+      .select("*");
 
     if (limit && resultRows.length > limit) {
       resultRows = resultRows.slice(0, limit);
@@ -58,7 +58,7 @@ export const GetUserRecentlyListened: HonoFn<
       resultRows[resultRows.length - 1].played_at < afterTimestamp
     ) {
       const firstDisallowedIndex = resultRows.findIndex(
-        (item) => item.played_at < afterTimestamp
+        (item) => item.played_at < afterTimestamp,
       );
       resultRows = resultRows.slice(0, firstDisallowedIndex);
       hasAllRequestedRows = true;
@@ -70,17 +70,17 @@ export const GetUserRecentlyListened: HonoFn<
   }
 
   const additionalRows = await supabaseClient
-    .schema('spotify_cache')
-    .from('recently_listened')
-    .select('*')
-    .eq('user_id', userId)
-    .filter('played_at', 'gt', after || '0')
+    .schema("spotify_cache")
+    .from("recently_listened")
+    .select("*")
+    .eq("user_id", userId)
+    .filter("played_at", "gt", after || "0")
     .limit(limit ? limit - resultRows.length : Infinity);
 
   if (additionalRows.error) {
     const message = `Error fetching saved user recently listened tracks for user ${userId}`;
     console.error(
-      message + '\n' + JSON.stringify(additionalRows.error, null, 2)
+      message + "\n" + JSON.stringify(additionalRows.error, null, 2),
     );
     throw new HTTPException(500, {
       message,
@@ -89,6 +89,6 @@ export const GetUserRecentlyListened: HonoFn<
 
   return ctx.json(
     [...resultRows, ...additionalRows.data],
-    newRows.length ? 201 : 200
+    newRows.length ? 201 : 200,
   );
 };
