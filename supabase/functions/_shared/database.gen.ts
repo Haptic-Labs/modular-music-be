@@ -784,27 +784,6 @@ export type Database = {
         }
         Relationships: []
       }
-      artists: {
-        Row: {
-          album_ids: string[]
-          artist_id: string
-          created_at: string
-          id: string
-        }
-        Insert: {
-          album_ids?: string[]
-          artist_id: string
-          created_at?: string
-          id?: string
-        }
-        Update: {
-          album_ids?: string[]
-          artist_id?: string
-          created_at?: string
-          id?: string
-        }
-        Relationships: []
-      }
       playlists: {
         Row: {
           created_at: string
