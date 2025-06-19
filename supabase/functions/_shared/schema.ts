@@ -83,7 +83,9 @@ export type Schema = {
   RunModule: {
     path: Routes.RunModule;
     method: "POST";
-    request: Record<string, never>;
+    request: {
+      userId?: string;
+    };
     response: Record<string, never>;
   };
 };

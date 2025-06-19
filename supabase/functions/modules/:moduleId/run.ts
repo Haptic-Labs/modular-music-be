@@ -29,11 +29,48 @@ export const RunModule: H<
   const { authHeader } = validateAuth(ctx);
   const { user } = await setupSupabaseWithUser({ authHeader });
   const { serviceRoleSupabaseClient } = setupSupabaseWithServiceRole();
+  const requestBody = await ctx.req.json<Schema["RunModule"]["request"]>();
+  const providedUserId = requestBody.userId;
+
+  let canRunModule = false;
+
   const moduleId = ctx.req.param("moduleId");
 
   if (!moduleId) {
     throw new HTTPException(400, {
       message: "Missing required field: 'moduleId'",
+    });
+  }
+
+  const { data, error } = await serviceRoleSupabaseClient
+    .schema("public")
+    .from("modules")
+    .select("user_id")
+    .eq("id", moduleId)
+    .maybeSingle();
+
+  if (!data || error) {
+    throw new HTTPException(422, {
+      message: "Module does not exist",
+    });
+  }
+
+  if (
+    providedUserId &&
+    authHeader.replace("Bearer ", "") ===
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") &&
+    providedUserId === data.user_id
+  ) {
+    // If a userId is provided, allow if using service role is invoker
+    canRunModule = true;
+  } else if (data?.user_id === user.id) {
+    // Otherwise, only allow if the module belongs to the invoking user
+    canRunModule = true;
+  }
+
+  if (!canRunModule) {
+    throw new HTTPException(403, {
+      message: "You do not have permission to run this module",
     });
   }
 
