@@ -301,7 +301,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
     );
 
     if (requestBody?.fromSchedule) {
-      serviceRoleSupabaseClient.functions.invoke(
+      await serviceRoleSupabaseClient.functions.invoke(
         `modules/${moduleId}/schedule`,
         {
           body: {
