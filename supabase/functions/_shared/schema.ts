@@ -96,6 +96,13 @@ export type Schema = {
       next_run?: Database["public"]["Tables"]["modules"]["Row"]["next_run"];
       schedule_config?: Database["public"]["Tables"]["modules"]["Row"]["schedule_config"];
     };
-    response: Record<string, never>;
+    response: {
+      next_run: NonNullable<
+        Database["public"]["Tables"]["modules"]["Row"]["next_run"]
+      >;
+      schedule_config: NonNullable<
+        Database["public"]["Tables"]["modules"]["Row"]["schedule_config"]
+      >;
+    } | null;
   };
 };
