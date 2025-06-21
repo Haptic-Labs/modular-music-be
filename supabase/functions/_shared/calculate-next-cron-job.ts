@@ -80,7 +80,7 @@ export const calculateNextCronJob = ({
     return undefined;
   }
 
-  const nextRunDayJs = dayjs(next_run).utc();
+  let nextRunDayJs = dayjs(next_run).utc();
   const isPast = new Date(next_run).getTime() < Date.now();
   console.log("haptic-test", "Calculating next cron job", {
     next_run,
@@ -105,7 +105,7 @@ export const calculateNextCronJob = ({
       );
       return undefined;
     }
-    nextRunDayJs.add(schedule_config.quantity, dayjsInterval);
+    nextRunDayJs = nextRunDayJs.add(schedule_config.quantity, dayjsInterval);
     console.log("haptic-test", "Calculated next cron job", {
       calculateNextRun: nextRunDayJs.toISOString(),
     });
