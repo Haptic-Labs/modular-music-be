@@ -10,8 +10,8 @@ export enum Routes {
   SaveUserRecentlyListened = "/spotify/tracks/recently-listened/:userId",
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   GetUserRecentlyListened = "/spotify/tracks/recently-listened/:userId",
-  RunModule = "modules/:moduleId/run",
-  ScheduleModule = "modules/:moduleId/schedule",
+  RunModule = "/modules/:moduleId/run",
+  ScheduleModule = "/modules/:moduleId/schedule",
 }
 
 type GetArtistTracksResponse = {
