@@ -25,9 +25,18 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
       .rpc("DeleteModuleCronJob", {
         moduleId,
       });
-    if (error) {
+    const { error: error2 } = await supabaseClient
+      .schema("public")
+      .from("modules")
+      .update({
+        next_run: null,
+        schedule_config: null,
+      })
+      .eq("id", moduleId)
+      .eq("user_id", user.id);
+    if (error || error2) {
       throw new HTTPException(400, {
-        message: `Error deleting module cron job\n${JSON.stringify(error.message, null, 2)}`,
+        message: `Error deleting module cron job\n${JSON.stringify(error?.message ?? error2?.message, null, 2)}`,
       });
     }
     return ctx.json({}, 204);
