@@ -30,7 +30,7 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
         message: `Error deleting module cron job\n${JSON.stringify(error.message, null, 2)}`,
       });
     }
-    return ctx.json(null, 204);
+    return ctx.json({}, 204);
   }
 
   const cronString = calculateNextCronJob({
