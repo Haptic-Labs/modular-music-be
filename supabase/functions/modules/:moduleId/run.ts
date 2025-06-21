@@ -300,8 +300,16 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
       }) ?? [],
     );
 
+    await serviceRoleSupabaseClient
+      .schema("public")
+      .from("modules")
+      .update({
+        previous_run: new Date().toISOString(),
+      })
+      .eq("id", moduleId);
+
     if (requestBody?.fromSchedule) {
-      await serviceRoleSupabaseClient.functions.invoke(
+      const res = await serviceRoleSupabaseClient.functions.invoke(
         `modules/${moduleId}/schedule`,
         {
           body: {
@@ -309,6 +317,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
           },
         },
       );
+      console.info("brayden-test", JSON.stringify(res, null, 2));
     }
 
     return ctx.json({}, 201);
