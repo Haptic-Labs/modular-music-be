@@ -320,15 +320,22 @@
     "https://deno.land/x/sentry/index.mjs": "https://deno.land/x/sentry@8.55.0/index.mjs"
   },
   "remote": {
-    "https://deno.land/x/sentry@8.55.0/index.mjs": "573a1f82e1528ad6d211cb4945c2df63168d038b500f80922efce0e8cff801cb"
+    "https://cdn.skypack.dev/-/dayjs@v1.11.13-VE4qN76xFOf6Bduj9jfS/dist=es2019,mode=imports/optimized/dayjs.js": "596a73ea537b1d5350ff8ccdb35fdb86ed5b8c50112f8d2ceabeda4ab33f0458",
+    "https://cdn.skypack.dev/-/dayjs@v1.11.13-VE4qN76xFOf6Bduj9jfS/dist=es2019,mode=imports/unoptimized/plugin/utc.js": "1885f944b6b0d7646f190b5526d0f09c0c1b8be61cf7fdf34b9403857e3da046",
+    "https://cdn.skypack.dev/dayjs@1.11.13": "d0f1a843dc957ca04a90599c778faea9479dd9dddab50d8cf371a5f61e36d7da",
+    "https://cdn.skypack.dev/dayjs@1.11.13/plugin/utc": "cc07c0d4226959d8f7afbb31fb3d16c648bc2c41098947946276e23c0731ed8a",
+    "https://deno.land/x/sentry@8.55.0/index.mjs": "573a1f82e1528ad6d211cb4945c2df63168d038b500f80922efce0e8cff801cb",
+    "https://esm.sh/dayjs@1.11.13": "89c34b8b3f7b970708114b4d264c9430c30eb0c2eab1419410c77ffefa18fe2c",
+    "https://esm.sh/dayjs@1.11.13/denonext/dayjs.mjs": "a6d8258bec464149ab2c9ae26e4bd3736897828586b03f8fea45403080bf8a80",
+    "https://esm.sh/dayjs@1.11.13/denonext/plugin/utc.mjs": "7e89223a0933377aaa5fd52d97f116ed3d48c93d5b2ed305d86bde9e496b3e12",
+    "https://esm.sh/dayjs@1.11.13/plugin/utc": "2e41a0673e6e7c7c962983f1680911ef6feb27ded6007bc7705787ac1b2637b7"
   },
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@4.4.8",
       "jsr:@supabase/functions-js",
       "npm:@soundify/web-api@1.1.5",
-      "npm:@supabase/supabase-js@2",
-      "npm:dayjs@1.11.13"
+      "npm:@supabase/supabase-js@2"
     ]
   }
 }
