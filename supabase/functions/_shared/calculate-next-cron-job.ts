@@ -1,6 +1,6 @@
 import { Database } from "@shared/database.gen.ts";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
+import dayjs from "@dayjs";
+import utc from "@dayjs-utc";
 dayjs.extend(utc);
 
 type ConstructCronStringArgs = {
