@@ -73,7 +73,7 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
 
     next_run = currentModule.data.next_run;
     schedule_config = currentModule.data.schedule_config;
-  } else if (!reschedule) {
+  } else if (!reschedule && (!next_run || !schedule_config)) {
     throw new HTTPException(400, {
       message: `Error: 'reschedule' is false but 'next_run' or 'schedule_config' is missing`,
     });
