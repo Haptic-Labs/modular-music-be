@@ -65,6 +65,8 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
     });
   }
 
+  const resolvedUserId = providedUserId || user.id;
+
   await serviceRoleSupabaseClient
     .schema("public")
     .from("modules")
@@ -76,7 +78,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
   try {
     const { data: moduleData, error } = await serviceRoleSupabaseClient
       .schema("public")
-      .rpc("GetModuleRunData", { moduleId, callerUserId: user.id });
+      .rpc("GetModuleRunData", { moduleId, callerUserId: resolvedUserId });
 
     if (error) {
       const errorCode = parseInt(error.code, 10);
@@ -99,7 +101,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
       allTrackIds: initialTrackIds,
       likedSongsTrackIds: initialLikedSongsTrackIdsSet,
     } = await getAllTrackIds({
-      userId: user.id,
+      userId: resolvedUserId,
       sources: moduleData.moduleSources ?? [],
       supabaseClient: serviceRoleSupabaseClient,
       checkIfSaved: false,
@@ -108,7 +110,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
 
     const spotifyClient = await setupSpotifyClientWithoutTokens({
       supabaseClient: serviceRoleSupabaseClient,
-      userId: user.id,
+      userId: resolvedUserId,
     });
 
     // Run through actions
@@ -128,7 +130,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
                 spotifyClient,
                 trackIds: workingTrackIds,
                 likedTrackIds: likedSongsTrackIdsSet,
-                userId: user.id,
+                userId: resolvedUserId,
                 limit:
                   moduleData.limitConfigs?.find(
                     (config) => config.id === action.id,
@@ -146,7 +148,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
                       type: source.source_type,
                     })) ?? [],
                 supabaseClient: serviceRoleSupabaseClient,
-                userId: user.id,
+                userId: resolvedUserId,
                 checkIfSaved: false,
               });
               allTrackIds.forEach((trackId) => workingTrackIds.add(trackId));
@@ -167,7 +169,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
                       type: source.source_type,
                     })) ?? [],
                 supabaseClient: serviceRoleSupabaseClient,
-                userId: user.id,
+                userId: resolvedUserId,
                 checkIfSaved: false,
               });
               trackIdsToRemove.forEach((trackId) =>
@@ -201,7 +203,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
         spotifyClient,
         trackIds,
         likedTrackIds: likedSongsTrackIdsSet,
-        userId: user.id,
+        userId: resolvedUserId,
         limit: initialTrackIds.size,
       });
     }
@@ -244,7 +246,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
                 const { data: playlist } = await getPlaylistData({
                   spotifyId: output.spotify_id,
                   supabaseClient: serviceRoleSupabaseClient,
-                  userId: user.id,
+                  userId: resolvedUserId,
                   spotifyClient,
                 });
                 const playlistTrackBatches = chunkArray(
