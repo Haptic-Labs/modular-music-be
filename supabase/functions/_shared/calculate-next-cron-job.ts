@@ -82,6 +82,12 @@ export const calculateNextCronJob = ({
 
   const nextRunDayJs = dayjs(next_run).utc();
   const isPast = new Date(next_run).getTime() < Date.now();
+  console.log("haptic-test", "Calculating next cron job", {
+    next_run,
+    schedule_config,
+    isPast,
+    originalNextRun: nextRunDayJs.toISOString(),
+  });
   if (isPast) {
     const dayjsInterval = convertIntervalToDayJSInterval(
       schedule_config.interval,
@@ -100,6 +106,9 @@ export const calculateNextCronJob = ({
       return undefined;
     }
     nextRunDayJs.add(schedule_config.quantity, dayjsInterval);
+    console.log("haptic-test", "Calculated next cron job", {
+      calculateNextRun: nextRunDayJs.toISOString(),
+    });
   }
 
   const minutes = nextRunDayJs.minute();
@@ -108,6 +117,13 @@ export const calculateNextCronJob = ({
   const month = nextRunDayJs.month() + 1; // dayjs months are 0-indexed
 
   const cronString = constructCronString({
+    minutes,
+    hour,
+    dayOfMonth,
+    month,
+  });
+  console.log("haptic-test", "Constructed cron string", {
+    cronString,
     minutes,
     hour,
     dayOfMonth,
