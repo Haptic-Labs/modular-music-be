@@ -86,6 +86,7 @@ export type Schema = {
     method: "POST";
     request: {
       userId?: string;
+      fromSchedule?: boolean;
     };
     response: Record<string, never>;
   };
@@ -95,6 +96,7 @@ export type Schema = {
     request: {
       next_run?: Database["public"]["Tables"]["modules"]["Row"]["next_run"];
       schedule_config?: Database["public"]["Tables"]["modules"]["Row"]["schedule_config"];
+      reschedule?: boolean;
     };
     response: {
       next_run: NonNullable<

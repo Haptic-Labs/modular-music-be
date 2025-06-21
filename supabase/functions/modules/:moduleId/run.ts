@@ -6,26 +6,17 @@ import { validateAuth } from "@shared/validate-auth.ts";
 import { trueRandomShuffle } from "@shared/shuffles/true-random-shuffle.ts";
 import { getAllTrackIds } from "@shared/spotify-data-fetchers/get-all-track-ids.ts";
 import { HTTPException } from "@hono/http-exception";
-import { BlankEnv, H, HandlerResponse } from "@hono/types";
 import { Schema } from "@shared/schema.ts";
 import { addItemsToPlaylist, removePlaylistItems } from "@soundify/web-api";
 import { setupSpotifyClientWithoutTokens } from "@shared/setup-spotify-client.ts";
 import { chunkArray } from "@shared/chunk-array.ts";
 import { getPlaylistData } from "@shared/spotify-data-fetchers/get-playlist-data.ts";
 import { limitTracksWithCheck } from "@shared/limit-tracks-with-check.ts";
+import { HonoFn } from "@shared/types.ts";
 
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
-export const RunModule: H<
-  BlankEnv,
-  Schema["RunModule"]["path"],
-  {
-    in: Schema["RunModule"]["request"];
-    out: Schema["RunModule"]["request"];
-    outputFormat: "json";
-  },
-  HandlerResponse<Schema["RunModule"]["response"]>
-> = async (ctx) => {
+export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
   const { authHeader } = validateAuth(ctx);
   const { user } = await setupSupabaseWithUser({ authHeader });
   const { serviceRoleSupabaseClient } = setupSupabaseWithServiceRole();
@@ -292,6 +283,17 @@ export const RunModule: H<
         }
       }) ?? [],
     );
+
+    if (requestBody?.fromSchedule) {
+      serviceRoleSupabaseClient.functions.invoke(
+        `modules/${moduleId}/schedule`,
+        {
+          body: {
+            reschedule: true,
+          },
+        },
+      );
+    }
 
     return ctx.json({}, 201);
   } finally {
