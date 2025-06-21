@@ -320,7 +320,7 @@ export type Database = {
           id: string
           is_running: boolean
           name: string
-          next_scheduled_run: string | null
+          next_run: string | null
           previous_run: string | null
           schedule_config:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -334,7 +334,7 @@ export type Database = {
           id?: string
           is_running?: boolean
           name: string
-          next_scheduled_run?: string | null
+          next_run?: string | null
           previous_run?: string | null
           schedule_config?:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -348,7 +348,7 @@ export type Database = {
           id?: string
           is_running?: boolean
           name?: string
-          next_scheduled_run?: string | null
+          next_run?: string | null
           previous_run?: string | null
           schedule_config?:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -422,6 +422,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      DeleteModuleCronJob: {
+        Args: { moduleId: string }
+        Returns: undefined
+      }
       GetCombineAction: {
         Args: { actionId: string }
         Returns: Database["public"]["CompositeTypes"]["ModuleAction:Combine"]
@@ -453,6 +457,10 @@ export type Database = {
       ReorderActions: {
         Args: { action_ids: string[] }
         Returns: Database["public"]["Tables"]["module_actions"]["Row"][]
+      }
+      ScheduleModuleCronJob: {
+        Args: { moduleId: string; cronString: string }
+        Returns: undefined
       }
       UpsertModuleActionCombine: {
         Args: {
@@ -781,27 +789,6 @@ export type Database = {
           created_at?: string
           id?: string
           track_ids?: string[]
-        }
-        Relationships: []
-      }
-      artists: {
-        Row: {
-          album_ids: string[]
-          artist_id: string
-          created_at: string
-          id: string
-        }
-        Insert: {
-          album_ids?: string[]
-          artist_id: string
-          created_at?: string
-          id?: string
-        }
-        Update: {
-          album_ids?: string[]
-          artist_id?: string
-          created_at?: string
-          id?: string
         }
         Relationships: []
       }
