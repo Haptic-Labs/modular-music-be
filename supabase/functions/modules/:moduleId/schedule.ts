@@ -19,7 +19,14 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
 
   let { next_run, schedule_config, reschedule } =
     (await ctx.req.json<Schema["ScheduleModule"]["request"]>()) ?? {};
+  console.log("haptic-test", "schedule request recieved", {
+    moduleId,
+    next_run,
+    schedule_config,
+    reschedule,
+  });
   if (!reschedule && (!next_run || !schedule_config)) {
+    console.log("haptic-test", "deleting module cron job");
     const { error } = await supabaseClient
       .schema("public")
       .rpc("DeleteModuleCronJob", {
@@ -60,6 +67,9 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
       .select("next_run, schedule_config")
       .eq("id", moduleId)
       .maybeSingle();
+    console.log("haptic-test", "fetched current module for reschedule", {
+      currentModule,
+    });
     if (
       currentModule.error ||
       !currentModule.data ||
@@ -90,6 +100,10 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
       next_run,
       schedule_config,
     }) ?? {};
+  console.log("haptic-test", "calculated cron string and next run", {
+    cronString,
+    nextRun,
+  });
   if (!cronString || !nextRun) {
     throw new HTTPException(400, {
       message:
