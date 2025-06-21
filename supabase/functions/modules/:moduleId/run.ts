@@ -13,12 +13,25 @@ import { chunkArray } from "@shared/chunk-array.ts";
 import { getPlaylistData } from "@shared/spotify-data-fetchers/get-playlist-data.ts";
 import { limitTracksWithCheck } from "@shared/limit-tracks-with-check.ts";
 import { HonoFn } from "@shared/types.ts";
+import { User } from "@supabase/supabase-js";
 
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
 export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
   const { authHeader } = validateAuth(ctx);
-  const { user } = await setupSupabaseWithUser({ authHeader });
+  const isServiceRole =
+    authHeader.replace("Bearer ", "") ===
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  let user: User | undefined;
+  try {
+    const res = await setupSupabaseWithUser({ authHeader });
+    user = res.user;
+  } catch (error) {
+    if (!isServiceRole) {
+      throw error;
+    }
+  }
+
   const { serviceRoleSupabaseClient } = setupSupabaseWithServiceRole();
   const requestBody = await ctx.req.json<Schema["RunModule"]["request"]>();
   const providedUserId = requestBody.userId;
@@ -46,15 +59,10 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
     });
   }
 
-  if (
-    providedUserId &&
-    authHeader.replace("Bearer ", "") ===
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") &&
-    providedUserId === data.user_id
-  ) {
+  if (providedUserId && isServiceRole && providedUserId === data.user_id) {
     // If a userId is provided, allow if using service role is invoker
     canRunModule = true;
-  } else if (data?.user_id === user.id) {
+  } else if (data?.user_id === user?.id) {
     // Otherwise, only allow if the module belongs to the invoking user
     canRunModule = true;
   }
@@ -65,7 +73,13 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
     });
   }
 
-  const resolvedUserId = providedUserId || user.id;
+  const resolvedUserId = providedUserId || user?.id;
+
+  if (!resolvedUserId) {
+    throw new HTTPException(500, {
+      message: "No userId found",
+    });
+  }
 
   await serviceRoleSupabaseClient
     .schema("public")
