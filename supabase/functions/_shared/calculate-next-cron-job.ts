@@ -69,7 +69,9 @@ type CalculateNextCronJobArgs = {
 export const calculateNextCronJob = ({
   next_run,
   schedule_config,
-}: CalculateNextCronJobArgs): string | undefined => {
+}: CalculateNextCronJobArgs):
+  | { cronString: string; nextRun: string }
+  | undefined => {
   if (!schedule_config.quantity || !schedule_config.interval) {
     console.error(
       'Error calculating next cron job: missing "quantity" or "interval" in schedule_config',
@@ -125,7 +127,8 @@ export const calculateNextCronJob = ({
         2,
       ),
     );
+    return undefined;
   }
 
-  return cronString;
+  return { cronString, nextRun: nextRunDayJs.toISOString() };
 };

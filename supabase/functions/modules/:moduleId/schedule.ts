@@ -42,11 +42,12 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
     return ctx.body(null, 204);
   }
 
-  const cronString = calculateNextCronJob({
-    next_run,
-    schedule_config,
-  });
-  if (!cronString) {
+  const { cronString, nextRun } =
+    calculateNextCronJob({
+      next_run,
+      schedule_config,
+    }) ?? {};
+  if (!cronString || !nextRun) {
     throw new HTTPException(400, {
       message:
         "Error calculating cron string from next_run and schedule_config",
@@ -57,7 +58,7 @@ export const ScheduleModule: HonoFn<"ScheduleModule"> = async (ctx) => {
     .schema("public")
     .from("modules")
     .update({
-      next_run,
+      next_run: nextRun,
       schedule_config,
     })
     .eq("id", moduleId)
