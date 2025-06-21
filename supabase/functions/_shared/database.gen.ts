@@ -320,6 +320,7 @@ export type Database = {
           id: string
           is_running: boolean
           name: string
+          next_run: string | null
           previous_run: string | null
           schedule_config:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -333,6 +334,7 @@ export type Database = {
           id?: string
           is_running?: boolean
           name: string
+          next_run?: string | null
           previous_run?: string | null
           schedule_config?:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -346,6 +348,7 @@ export type Database = {
           id?: string
           is_running?: boolean
           name?: string
+          next_run?: string | null
           previous_run?: string | null
           schedule_config?:
             | Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]
@@ -419,6 +422,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      DeleteModuleCronJob: {
+        Args: { moduleId: string }
+        Returns: undefined
+      }
       GetCombineAction: {
         Args: { actionId: string }
         Returns: Database["public"]["CompositeTypes"]["ModuleAction:Combine"]
@@ -450,6 +457,10 @@ export type Database = {
       ReorderActions: {
         Args: { action_ids: string[] }
         Returns: Database["public"]["Tables"]["module_actions"]["Row"][]
+      }
+      ScheduleModuleCronJob: {
+        Args: { moduleId: string; cronString: string }
+        Returns: undefined
       }
       UpsertModuleActionCombine: {
         Args: {

@@ -11,6 +11,7 @@ export enum Routes {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   GetUserRecentlyListened = "/spotify/tracks/recently-listened/:userId",
   RunModule = "modules/:moduleId/run",
+  ScheduleModule = "modules/:moduleId/schedule",
 }
 
 type GetArtistTracksResponse = {
@@ -85,6 +86,15 @@ export type Schema = {
     method: "POST";
     request: {
       userId?: string;
+    };
+    response: Record<string, never>;
+  };
+  ScheduleModule: {
+    path: Routes.ScheduleModule;
+    method: "POST";
+    request: {
+      next_run?: Database["public"]["Tables"]["modules"]["Row"]["next_run"];
+      schedule_config?: Database["public"]["Tables"]["modules"]["Row"]["schedule_config"];
     };
     response: Record<string, never>;
   };

@@ -13,7 +13,8 @@
     "@soundify/web-api": "npm:@soundify/web-api@1.1.5",
     "@soundify/pagination": "npm:@soundify/web-api@1.1.5/pagination",
     "@shared/": "./_shared/",
-    "@sentry": "https://deno.land/x/sentry@8.55.0/index.mjs"
+    "@sentry": "https://deno.land/x/sentry@8.55.0/index.mjs",
+    "dayjs": "npm:dayjs@1.11.13"
   },
   "deno": "1.45.2",
   "lock": true,

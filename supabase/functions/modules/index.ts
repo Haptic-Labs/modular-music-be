@@ -4,6 +4,7 @@ import { Hono } from "@hono/hono";
 import { HONO_CORS } from "@shared/cors.ts";
 import { Routes } from "@shared/schema.ts";
 import { RunModule } from "@modules/:moduleId/run.ts";
+import { ScheduleModule } from "@modules/:moduleId/schedule.ts";
 
 Sentry.init({
   dsn: Deno.env.get("SENTRY_DSN"),
@@ -18,6 +19,7 @@ const server = new Hono();
 server.use("*", HONO_CORS);
 
 server.post(Routes.RunModule, RunModule);
+server.post(Routes.ScheduleModule, ScheduleModule);
 
 Deno.serve((...args) => {
   try {
