@@ -1,7 +1,4 @@
 import { Database } from "@shared/database.gen.ts";
-import dayjs from "@dayjs";
-import utc from "@dayjs-utc";
-dayjs.extend(utc);
 
 type ConstructCronStringArgs = {
   minutes: number;
@@ -42,22 +39,20 @@ const constructCronString = (
   return result;
 };
 
-const convertIntervalToDayJSInterval = (
+const convertIntervalToMSMultiplier = (
   interval: NonNullable<
     Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]["interval"]
   >,
-): dayjs.ManipulateType | undefined => {
+): number | undefined => {
   switch (interval) {
     case "YEARS":
-      return "year";
+      return 1000 * 60 * 60 * 24 * 365;
     case "MONTHS":
-      return "month";
+      return 1000 * 60 * 60 * 24 * 30;
     case "WEEKS":
-      return "week";
+      return 1000 * 60 * 60 * 24 * 7;
     case "DAYS":
-      return "day";
-    default:
-      return undefined;
+      return 1000 * 60 * 60 * 24;
   }
 };
 
@@ -80,21 +75,22 @@ export const calculateNextCronJob = ({
     return undefined;
   }
 
-  let nextRunDayJs = dayjs(next_run).utc();
-  const isPast = new Date(next_run).getTime() < Date.now();
+  let nextRunDate = new Date(next_run);
+  const isPast = nextRunDate.getTime() < Date.now();
   console.log("haptic-test", "Calculating next cron job", {
     next_run,
     schedule_config,
     isPast,
-    originalNextRun: nextRunDayJs.toISOString(),
+    originalNextRun: nextRunDate.toISOString(),
   });
   if (isPast) {
-    const dayjsInterval = convertIntervalToDayJSInterval(
+    const msMultiplier = convertIntervalToMSMultiplier(
       schedule_config.interval,
     );
-    if (!dayjsInterval) {
+
+    if (!msMultiplier) {
       console.error(
-        "Error converting interval to dayjs interval: invalid interval",
+        "Error converting interval to multiplier",
         JSON.stringify(
           {
             schedule_config,
@@ -105,16 +101,18 @@ export const calculateNextCronJob = ({
       );
       return undefined;
     }
-    nextRunDayJs = nextRunDayJs.add(schedule_config.quantity, dayjsInterval);
+    nextRunDate = new Date(
+      nextRunDate.getTime() + schedule_config.quantity * msMultiplier,
+    );
     console.log("haptic-test", "Calculated next cron job", {
-      calculateNextRun: nextRunDayJs.toISOString(),
+      calculateNextRun: nextRunDate.toISOString(),
     });
   }
 
-  const minutes = nextRunDayJs.minute();
-  const hour = nextRunDayJs.hour();
-  const dayOfMonth = nextRunDayJs.date();
-  const month = nextRunDayJs.month() + 1; // dayjs months are 0-indexed
+  const minutes = nextRunDate.getUTCMinutes();
+  const hour = nextRunDate.getUTCHours();
+  const dayOfMonth = nextRunDate.getUTCDate();
+  const month = nextRunDate.getUTCMonth() + 1; // Month is 0-indexed in JavaScript
 
   const cronString = constructCronString({
     minutes,
@@ -146,5 +144,5 @@ export const calculateNextCronJob = ({
     return undefined;
   }
 
-  return { cronString, nextRun: nextRunDayJs.toISOString() };
+  return { cronString, nextRun: nextRunDate.toISOString() };
 };
