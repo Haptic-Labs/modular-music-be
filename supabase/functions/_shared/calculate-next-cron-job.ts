@@ -1,4 +1,5 @@
 import { Database } from "@shared/database.gen.ts";
+import { add } from "@addDateFn";
 
 type ConstructCronStringArgs = {
   minutes: number;
@@ -39,21 +40,31 @@ const constructCronString = (
   return result;
 };
 
-const convertIntervalToMSMultiplier = (
-  interval: NonNullable<
-    Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]["interval"]
-  >,
-): number | undefined => {
-  // TODO: improve support for same day of month and stuff
-  switch (interval) {
+const calculateNextRunFromSchedule = (
+  timestamp: string,
+  scheduleConfig: Database["public"]["CompositeTypes"]["ModuleScheduleConfig"],
+): Date | undefined => {
+  if (scheduleConfig.quantity === null || scheduleConfig.interval === null) {
+    return undefined;
+  }
+
+  switch (scheduleConfig.interval) {
     case "YEARS":
-      return 1000 * 60 * 60 * 24 * 365;
+      return add(new Date(timestamp), {
+        years: scheduleConfig.quantity,
+      });
     case "MONTHS":
-      return 1000 * 60 * 60 * 24 * 30;
+      return add(new Date(timestamp), {
+        months: scheduleConfig.quantity,
+      });
     case "WEEKS":
-      return 1000 * 60 * 60 * 24 * 7;
+      return add(new Date(timestamp), {
+        weeks: scheduleConfig.quantity,
+      });
     case "DAYS":
-      return 1000 * 60 * 60 * 24;
+      return add(new Date(timestamp), {
+        days: scheduleConfig.quantity,
+      });
   }
 };
 
@@ -76,7 +87,7 @@ export const calculateNextCronJob = ({
     return undefined;
   }
 
-  let nextRunDate = new Date(next_run);
+  let nextRunDate: Date | undefined = new Date(next_run);
   const isPast = nextRunDate.getTime() < Date.now();
   console.log("haptic-test", "Calculating next cron job", {
     next_run,
@@ -85,11 +96,12 @@ export const calculateNextCronJob = ({
     originalNextRun: nextRunDate.toISOString(),
   });
   if (isPast) {
-    const msMultiplier = convertIntervalToMSMultiplier(
-      schedule_config.interval,
+    nextRunDate = calculateNextRunFromSchedule(
+      nextRunDate.toISOString(),
+      schedule_config,
     );
 
-    if (!msMultiplier) {
+    if (!nextRunDate) {
       console.error(
         "Error converting interval to multiplier",
         JSON.stringify(
@@ -102,9 +114,6 @@ export const calculateNextCronJob = ({
       );
       return undefined;
     }
-    nextRunDate = new Date(
-      nextRunDate.getTime() + schedule_config.quantity * msMultiplier,
-    );
     console.log("haptic-test", "Calculated next cron job", {
       calculateNextRun: nextRunDate.toISOString(),
     });

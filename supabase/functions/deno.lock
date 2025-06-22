@@ -317,7 +317,8 @@
     }
   },
   "redirects": {
-    "https://deno.land/x/sentry/index.mjs": "https://deno.land/x/sentry@8.55.0/index.mjs"
+    "https://deno.land/x/sentry/index.mjs": "https://deno.land/x/sentry@8.55.0/index.mjs",
+    "https://esm.sh/date-fns/add.mjs": "https://esm.sh/date-fns@4.1.0/add.mjs"
   },
   "remote": {
     "https://cdn.skypack.dev/-/dayjs@v1.11.13-VE4qN76xFOf6Bduj9jfS/dist=es2019,mode=imports/optimized/dayjs.js": "596a73ea537b1d5350ff8ccdb35fdb86ed5b8c50112f8d2ceabeda4ab33f0458",
@@ -325,6 +326,13 @@
     "https://cdn.skypack.dev/dayjs@1.11.13": "d0f1a843dc957ca04a90599c778faea9479dd9dddab50d8cf371a5f61e36d7da",
     "https://cdn.skypack.dev/dayjs@1.11.13/plugin/utc": "cc07c0d4226959d8f7afbb31fb3d16c648bc2c41098947946276e23c0731ed8a",
     "https://deno.land/x/sentry@8.55.0/index.mjs": "573a1f82e1528ad6d211cb4945c2df63168d038b500f80922efce0e8cff801cb",
+    "https://esm.sh/date-fns@4.1.0/add.mjs": "04843d31545b9010790dc287b3506ec0cdb3c1d47751d4d9f772fd0cf837dc41",
+    "https://esm.sh/date-fns@4.1.0/denonext/add.mjs": "26a2a22438b3423b517283946935e7e2648ab315972463f55b3d0669ced2f0d8",
+    "https://esm.sh/date-fns@4.1.0/denonext/addDays.mjs": "6517c30e4b6b2eabf196b3851659b6b16b259f7fbb597272461bd5482978228f",
+    "https://esm.sh/date-fns@4.1.0/denonext/addMonths.mjs": "a87118dea84b9155c5bc9e40bd70199f99d251477e8ed3b6321bafd5fba29f4c",
+    "https://esm.sh/date-fns@4.1.0/denonext/constants.mjs": "1ea8dfa636b4311d3ff6fac378624ad95441e1acbda70a7055216e08fbb2ebfd",
+    "https://esm.sh/date-fns@4.1.0/denonext/constructFrom.mjs": "f856b769bce61b5960f58a62f7667b74cd555ac4d28cae904ca0e76ee83dc127",
+    "https://esm.sh/date-fns@4.1.0/denonext/toDate.mjs": "108e144e04605f9363ffb223f7f36ac42a9c7a272a7d9618c80b45e48efbc7ef",
     "https://esm.sh/dayjs@1.11.13": "89c34b8b3f7b970708114b4d264c9430c30eb0c2eab1419410c77ffefa18fe2c",
     "https://esm.sh/dayjs@1.11.13/denonext/dayjs.mjs": "a6d8258bec464149ab2c9ae26e4bd3736897828586b03f8fea45403080bf8a80",
     "https://esm.sh/dayjs@1.11.13/denonext/plugin/utc.mjs": "7e89223a0933377aaa5fd52d97f116ed3d48c93d5b2ed305d86bde9e496b3e12",
