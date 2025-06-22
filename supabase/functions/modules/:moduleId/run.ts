@@ -309,7 +309,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
       .eq("id", moduleId);
 
     if (requestBody?.fromSchedule) {
-      const res = await serviceRoleSupabaseClient.functions.invoke(
+      await serviceRoleSupabaseClient.functions.invoke(
         `modules/${moduleId}/schedule`,
         {
           body: {
@@ -317,7 +317,6 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
           },
         },
       );
-      console.info("haptic-test", JSON.stringify(res, null, 2));
     }
 
     return ctx.json({}, 201);
