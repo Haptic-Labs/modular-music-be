@@ -1,5 +1,5 @@
 import { Database } from "@shared/database.gen.ts";
-import { add } from "@addDateFn";
+import { calculateNewTimestamp } from "@shared/calculate-new-timestamp.ts";
 
 type ConstructCronStringArgs = {
   minutes: number;
@@ -40,34 +40,6 @@ const constructCronString = (
   return result;
 };
 
-const calculateNextRunFromSchedule = (
-  timestamp: string,
-  scheduleConfig: Database["public"]["CompositeTypes"]["ModuleScheduleConfig"],
-): Date | undefined => {
-  if (scheduleConfig.quantity === null || scheduleConfig.interval === null) {
-    return undefined;
-  }
-
-  switch (scheduleConfig.interval) {
-    case "YEARS":
-      return add(new Date(timestamp), {
-        years: scheduleConfig.quantity,
-      });
-    case "MONTHS":
-      return add(new Date(timestamp), {
-        months: scheduleConfig.quantity,
-      });
-    case "WEEKS":
-      return add(new Date(timestamp), {
-        weeks: scheduleConfig.quantity,
-      });
-    case "DAYS":
-      return add(new Date(timestamp), {
-        days: scheduleConfig.quantity,
-      });
-  }
-};
-
 type CalculateNextCronJobArgs = {
   next_run: string;
   schedule_config: Database["public"]["CompositeTypes"]["ModuleScheduleConfig"];
@@ -90,7 +62,7 @@ export const calculateNextCronJob = ({
   let nextRunDate: Date | undefined = new Date(next_run);
   const isPast = nextRunDate.getTime() < Date.now();
   if (isPast) {
-    nextRunDate = calculateNextRunFromSchedule(
+    nextRunDate = calculateNewTimestamp(
       nextRunDate.toISOString(),
       schedule_config,
     );

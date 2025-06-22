@@ -1,10 +1,9 @@
 import { HTTPException } from "@hono/http-exception";
 import type { Database } from "../database.gen.ts";
-import { setupSpotifyClientWithoutTokens } from "../setup-spotify-client.ts";
+import { setupSpotifyClientWithoutTokens } from "@shared/setup-spotify-client.ts";
 import type { SpotifyDataFetcherArgs } from "../types.ts";
-import { getUserLatestRecentlyListened } from "../get-user-latest-recently-listened.ts";
-
-const MS_IN_DAY = 1 * 24 * 60 * 60 * 1000; // 1 day in milliseconds
+import { getUserLatestRecentlyListened } from "@shared/get-user-latest-recently-listened.ts";
+import { calculateNewTimestamp } from "@shared/calculate-new-timestamp.ts";
 
 const filterRowsToLimit = (
   rows: Database["spotify_cache"]["Tables"]["recently_listened"]["Row"][],
@@ -74,14 +73,6 @@ export const getRecentlyListenedData = async ({
   }
 
   const currentTimestamp = Date.now();
-  const intervalMSOffsetMap: Record<
-    Database["public"]["Enums"]["RECENTLY_PLAYED_INTERVAL"],
-    number
-  > = {
-    DAYS: MS_IN_DAY,
-    WEEKS: 7 * MS_IN_DAY,
-    MONTHS: 30 * MS_IN_DAY, // TODO: improve to use actual month length based on month length before current month
-  };
 
   const newRows = await getUserLatestRecentlyListened({
     supabaseClient,
@@ -92,6 +83,14 @@ export const getRecentlyListenedData = async ({
   let hasAllRequestedRows = false;
   const resultRows: Database["spotify_cache"]["Tables"]["recently_listened"]["Row"][] =
     [];
+
+  const limitTimestamp = calculateNewTimestamp(
+    new Date(currentTimestamp).toISOString(),
+    {
+      quantity: config.quantity * -1,
+      interval: config.interval,
+    },
+  );
 
   if (newRows.length) {
     const { data: insertedRows, error } = await supabaseClient
@@ -117,7 +116,7 @@ export const getRecentlyListenedData = async ({
     if (insertedRows && insertedRows.length) {
       const { rows: resultRows, reachedLimit } = filterRowsToLimit(
         insertedRows,
-        new Date(currentTimestamp - intervalMSOffsetMap[config.interval]),
+        limitTimestamp,
       );
 
       resultRows.push(...resultRows);
@@ -136,13 +135,7 @@ export const getRecentlyListenedData = async ({
       .select("*", { count: "exact" })
       .eq("user_id", userId)
       .order("played_at", { ascending: false })
-      .filter(
-        "played_at",
-        "gt",
-        new Date(
-          currentTimestamp - intervalMSOffsetMap[config.interval],
-        ).toISOString(),
-      );
+      .filter("played_at", "gt", limitTimestamp.toISOString());
     const lastPlayedAt = resultRows.at(-1)?.played_at;
     if (lastPlayedAt) {
       query.filter("played_at", "lt", resultRows.at(-1)?.played_at);

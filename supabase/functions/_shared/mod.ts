@@ -17,3 +17,4 @@ export * from "./types.ts";
 export * from "./validate-auth.ts";
 export * from "./limit-tracks-with-check.ts";
 export * from "./calculate-next-cron-job.ts";
+export * from "./calculate-new-timestamp.ts";
