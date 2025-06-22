@@ -44,6 +44,7 @@ const convertIntervalToMSMultiplier = (
     Database["public"]["CompositeTypes"]["ModuleScheduleConfig"]["interval"]
   >,
 ): number | undefined => {
+  // TODO: improve support for same day of month and stuff
   switch (interval) {
     case "YEARS":
       return 1000 * 60 * 60 * 24 * 365;
