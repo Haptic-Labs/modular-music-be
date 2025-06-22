@@ -186,8 +186,22 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
                 userId: resolvedUserId,
                 checkIfSaved: false,
               });
+              const originalSize = workingTrackIds.size;
               trackIdsToRemove.forEach((trackId) =>
                 workingTrackIds.delete(trackId),
+              );
+              console.log(
+                "haptic-log",
+                "filtered tracks",
+                JSON.stringify(
+                  {
+                    originalSize,
+                    filteredSize: workingTrackIds.size,
+                    filterSources: moduleData.filterSources,
+                  },
+                  null,
+                  2,
+                ),
               );
               break;
             }
