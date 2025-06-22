@@ -15,6 +15,16 @@ import { limitTracksWithCheck } from "@shared/limit-tracks-with-check.ts";
 import { HonoFn } from "@shared/types.ts";
 import { User } from "@supabase/supabase-js";
 
+const getRequest = async (
+  ctx: Parameters<HonoFn<"RunModule">>[0],
+): Promise<Schema["RunModule"]["request"]> => {
+  try {
+    return (await ctx.req.json<Schema["RunModule"]["request"]>()) ?? {};
+  } catch {
+    return {};
+  }
+};
+
 type StatusCode = ConstructorParameters<typeof HTTPException>[0];
 
 export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
@@ -33,7 +43,7 @@ export const RunModule: HonoFn<"RunModule"> = async (ctx) => {
   }
 
   const { serviceRoleSupabaseClient } = setupSupabaseWithServiceRole();
-  const requestBody = await ctx.req.json<Schema["RunModule"]["request"]>();
+  const requestBody = await getRequest(ctx);
   const providedUserId = requestBody.userId;
 
   let canRunModule = false;
