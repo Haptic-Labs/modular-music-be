@@ -4,6 +4,8 @@
 
 The backend API for the Modular Music platform - a modular music automation system that allows users to create custom workflows for automated Spotify playlist generation. This Supabase-based backend provides Spotify integration, module execution, and scheduled automation capabilities.
 
+The eventual plan for this repo is to become a fully custom Go backend that will connect with supabase just for auth, and db hosting.
+
 ## Architecture Overview
 
 This backend is built on Supabase Edge Functions using Deno runtime and provides:
